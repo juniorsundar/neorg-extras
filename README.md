@@ -14,8 +14,15 @@ This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installat
 
 ### `lazy.nvim`
 
-```bash
+```lua
 return {
-    ""
+    "nvim-neorg/neorg",
+    dependencies = {
+        "juniorsundar/neorg_utils",
+        config = function()
+
+        end,
+    },
+    config = true,
 }
 ```
