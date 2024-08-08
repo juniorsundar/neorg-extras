@@ -126,7 +126,6 @@ function M.neorg_agenda(input_list)
     local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
     local base_directory = current_workspace[2]
 
-    -- local rg_command = [[rg '\* \(\s*(-?)\s*\)' --glob '*.norg' --line-number ]] .. base_directory
     local rg_command = [[rg '\* \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]] .. base_directory
     local rg_results = vim.fn.system(rg_command)
 
@@ -161,7 +160,8 @@ function M.neorg_agenda(input_list)
     end
 
     for _, qf_value in ipairs(quickfix_list) do
-        local agenda_data = extract_agenda_data(qf_value.filename, qf_value.lnum)
+        local agenda_data = extract_agenda_data(qf_value.filename,
+                                                qf_value.lnum)
         if agenda_data then
             for _, entry in ipairs(agenda_data) do
                 for line in string.gmatch(entry, "[^\r\n]+") do
