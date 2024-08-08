@@ -1,6 +1,6 @@
 # NeorgUtils
 
-> [!warning] Use with Caution
+> [!warning]
 > 
 > This is a highly opinionated plugin. I built this for the sole purpose of
 > streamlining my workflow. To that end, my implementation is highly
