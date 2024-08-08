@@ -1,6 +1,7 @@
 # NeorgUtils
 
 > [!warning] Use with Caution
+> 
 > This is a highly opinionated plugin. I built this for the sole purpose of
 > streamlining my workflow. To that end, my implementation is highly
 > opinionated and leaves very little room for customisation or personalisation.
