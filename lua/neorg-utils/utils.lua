@@ -18,6 +18,8 @@ function M.create_buffer(buffer_lines)
     vim.api.nvim_set_option_value("wrap", false, { win = win })
     vim.api.nvim_set_option_value("conceallevel", 2, { win = win })
     vim.api.nvim_set_option_value("foldlevel", 999, { win = win })
+    vim.api.nvim_set_option_value("number", false, { win = win })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = win })
 
     -- Map 'q' to close the tab
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':tabclose<CR>', { noremap = true, silent = true })
