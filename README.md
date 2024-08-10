@@ -1,7 +1,8 @@
-<title>NeorgUtils</title>
+<div align="center">
+    # NeorgUtils
+</div>
 
 <!--toc:start-->
-- [NeorgUtils](#neorgutils)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
   - [Others](#others)
@@ -42,6 +43,11 @@
 > 
 > They may not be the right or most optimal way to do things, but it works for
 > me. So, use at your own risk.
+
+# System Prerequisites
+
+- ripgrep [`rg`](https://github.com/BurntSushi/ripgrep)
+- fd [`fd`](https://github.com/sharkdp/fd)
 
 # Installation
 
