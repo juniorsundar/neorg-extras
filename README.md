@@ -1,8 +1,11 @@
 <div align="center">
+
     # NeorgUtils
+
 </div>
 
 <!--toc:start-->
+- [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
   - [Others](#others)
