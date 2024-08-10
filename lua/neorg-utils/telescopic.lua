@@ -1,5 +1,6 @@
 local M = {}
 
+-- Ensure Neorg is loaded; otherwise, throw an error
 local neorg_loaded, neorg = pcall(require, "neorg.core")
 assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
 
@@ -7,18 +8,23 @@ local utils = require("neorg-utils.utils")
 
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
-local conf = require("telescope.config").values -- allows us to use the values from the users config
+local conf = require("telescope.config").values -- Allows us to use the values from the user's config
 local make_entry = require("telescope.make_entry")
 local actions = require("telescope.actions")
 local actions_set = require("telescope.actions.set")
 local state = require("telescope.actions.state")
 
+-- Function to find and insert nodes from Neorg files.
+-- This function scans Neorg files in the current workspace and allows the user to either insert
+-- a selected node into the current buffer or create a new node.
 function M.neorg_node_injector()
     local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
     local base_directory = current_workspace[2]
 
+    -- Find all .norg files in the workspace
     local norg_files_output = vim.fn.systemlist("fd -e norg --type f --base-directory " .. base_directory)
 
+    -- Extract titles and paths from the Neorg files
     local title_path_pairs = {}
     for _, line in pairs(norg_files_output) do
         local full_path = base_directory .. "/" .. line
@@ -32,6 +38,8 @@ function M.neorg_node_injector()
 
     local opts = {}
     opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
+
+    -- Set up Telescope picker to display and select Neorg files
     pickers
         .new(opts, {
             prompt_title = "Find Norg Files",
@@ -49,18 +57,18 @@ function M.neorg_node_injector()
             sorter = conf.file_sorter(opts),
             layout_strategy = "vertical",
             attach_mappings = function(prompt_bufnr, map)
-                -- Insert currently selected node into the page
+                -- Map <C-i> to insert the selected node into the current buffer
                 map('i', '<C-i>', function()
                     local entry = state.get_selected_entry()
-                    print(vim.inspect(entry))
                     local current_file_path = entry.value
                     local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
                     local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
-                    -- Insert at location
+                    -- Insert at the cursor location
                     actions.close(prompt_bufnr)
                     vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. entry.display .. "]" }, "", false, true)
                 end)
-                -- Create a new node with written title and add it to the default note vault
+
+                -- Map <C-n> to create a new node with the given title in the default note vault
                 map('i', '<C-n>', function()
                     local prompt = state.get_current_line()
                     local title_token = prompt:gsub("%W", ""):lower()
@@ -79,16 +87,17 @@ function M.neorg_node_injector()
                     local vault_dir = base_directory .. "/vault/"
                     vim.fn.mkdir(vault_dir, "p")
 
-                    -- File naming tempate
+                    -- Create and open a new Neorg file with the generated title token
                     vim.api.nvim_command(
                         "edit " ..
-                        base_directory ..
-                        "/vault/" ..
+                        vault_dir ..
                         os.date("%Y%m%d%H%M%S-") ..
                         title_token ..
                         ".norg"
                     )
                     vim.cmd([[Neorg inject-metadata]])
+
+                    -- Update the title in the newly created buffer
                     local buf = vim.api.nvim_get_current_buf()
                     local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
                     for i, line in ipairs(lines) do
@@ -105,12 +114,17 @@ function M.neorg_node_injector()
         :find()
 end
 
+-- Function to find and insert blocks from Neorg files.
+-- This function searches for task blocks within Neorg files and allows the user to insert
+-- the selected block into the current buffer.
 function M.neorg_block_injector()
     local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
     local base_directory = current_workspace[2]
 
+    -- Define search pattern for different levels of task blocks
     local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* "]]
 
+    -- Run ripgrep to find matching lines in .norg files
     local rg_command = 'rg '
         .. search_path
         .. " "
@@ -118,7 +132,7 @@ function M.neorg_block_injector()
         .. base_directory
     local rg_results = vim.fn.system(rg_command)
 
-    -- Split the results by lines
+    -- Process the ripgrep results
     local matches = {}
     for line in rg_results:gmatch("([^\n]+)") do
         local file = line:match("^[^:]+")
@@ -134,6 +148,8 @@ function M.neorg_block_injector()
 
     local opts = {}
     opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
+
+    -- Set up Telescope picker to display and select Neorg blocks
     pickers
         .new(opts, {
             prompt_title = "Find Blocks",
@@ -159,12 +175,13 @@ function M.neorg_block_injector()
             sorter = conf.file_sorter(opts),
             layout_strategy = "vertical",
             attach_mappings = function(prompt_bufnr, map)
+                -- Map <C-i> to insert the selected block into the current buffer
                 map('i', '<C-i>', function()
                     local entry = state.get_selected_entry()
                     local filename = entry.filename
                     local base_path = base_directory:gsub("([^%w])", "%%%1")
                     local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
-                    -- Insert at location
+                    -- Insert at the cursor location
                     actions.close(prompt_bufnr)
                     vim.api.nvim_put({ "{:$/" .. rel_path .. ":" .. entry.line .. "}[" .. entry.line .. "]" }, "", false,
                         true)
@@ -175,16 +192,21 @@ function M.neorg_block_injector()
         :find()
 end
 
+-- Function to select and switch between Neorg workspaces.
+-- This function lists available workspaces and allows the user to switch to a selected workspace.
 function M.neorg_workspace_selector()
     local workspaces = neorg.modules.get_module("core.dirman").get_workspaces()
     local workspace_names = {}
 
+    -- Collect the names of all workspaces
     for name in pairs(workspaces) do
         table.insert(workspace_names, name)
     end
 
     local opts = {}
     opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
+
+    -- Set up Telescope picker to display and select Neorg workspaces
     pickers
         .new(opts, {
             prompt_title = "Select Neorg Workspace",
@@ -205,6 +227,7 @@ function M.neorg_workspace_selector()
             sorter = conf.file_sorter(opts),
             layout_strategy = "bottom_pane",
             attach_mappings = function(prompt_bufnr, map)
+                -- Map <CR> to switch to the selected workspace
                 map('i', '<CR>', function()
                     local entry = state.get_selected_entry()
                     actions.close(prompt_bufnr)
@@ -222,10 +245,13 @@ function M.neorg_workspace_selector()
         :find()
 end
 
+-- Function to find and display backlinks to the current Neorg file.
+-- This function searches for references to the current file in other Neorg files and lists them.
 function M.show_backlinks()
     local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
     local base_directory = current_workspace[2]
 
+    -- Get the path of the current file and convert it to a relative path within the workspace
     local current_file_path = vim.fn.expand("%:p")
     local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
     local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
@@ -236,6 +262,7 @@ function M.show_backlinks()
     end
     local search_path = "{:$/" .. relative_path .. ":"
 
+    -- Run ripgrep to find backlinks in other Neorg files
     local rg_command = 'rg --fixed-strings '
         .. "'"
         .. search_path
@@ -245,11 +272,10 @@ function M.show_backlinks()
         .. base_directory
     local rg_results = vim.fn.system(rg_command)
 
-    -- Split the results by lines
+    -- Process the ripgrep results to identify backlinks
     local matches = {}
     local self_title = utils.extract_file_metadata(current_file_path)["title"]
     for line in rg_results:gmatch("([^\n]+)") do
-        -- table.insert(lines, line)
         local file, lineno = line:match("^(.-):(%d+):")
         local metadata = utils.extract_file_metadata(file)
         if metadata == nil then
@@ -263,6 +289,8 @@ function M.show_backlinks()
 
     local opts = {}
     opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
+
+    -- Set up Telescope picker to display and select backlinks
     pickers
         .new(opts, {
             prompt_title = "Backlinks",
