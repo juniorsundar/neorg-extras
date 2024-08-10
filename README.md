@@ -99,7 +99,7 @@ plugin and simply skip the Neorg-Roam feature-set.
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
-| `<CR>`   | Sets workspace                                                                |
+| `<CR>`   | Sets workspace.                                                               |
 | `<C-i>`  | Sets workspace and opens the `index.norg` file in the workspace if it exists. |
 
 ### Nodes
@@ -146,7 +146,7 @@ unique filename into a `vault` folder in the workspace root.
 
 | Mappings | Action                                                                                                                         |
 |----------|--------------------------------------------------------------------------------------------------------------------------------|
-| `<CR>`     | Open to selected node                                                                                                          |
+| `<CR>`     | Open to selected node.                                                                                                          |
 | `<C-i>`    | Inserts hovering node into cursor location. Node's title will be concealing alias. Eg: `{:$/workspace/path/tonode:}[Title]`.     |
 | `<C-n>` | Creates new node with title of text in search bar and unique node name. |
 
@@ -182,17 +182,89 @@ You want to insert the block into your cursor location as a link.
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
-| `<CR>`   | Open to selected block                                                                |
+| `<CR>`   | Open to selected block.                                                                |
 | `<C-i>`  | Inserts hovering block into cursor location. |
 
 ### Backlinks
 
 #### Rationale
 
+Since we are swearing off the file-tree, we need a way to conveniently navigate between nodes. The backlinks offer us an insight into the ways we can get to the current node.
+
+> [!IMPORTANT]
+> I believe that using Telescope to list out backlinks and using that as a
+> navigation methodology is flawed because you cannot have it open when working
+> on a current node. Backlinks should be visible at all times to be truly
+> effective, and if I have to press a keymap to open it, it wastes valuable
+> time.
+> 
+> TODO change this into a read-only buffer that can be toggled.
+
 #### Use-Case
+
+You want to determine all backlinks to current node, preview them, and navigate to them.
 
 #### Function
 
+| Mappings | Action                                                                        |
+|----------|-------------------------------------------------------------------------------|
+| `<CR>`   | Open to selected backlink location.                                           |
+
 ## Neorg-Agenda
 
+In order to organise your life in plain-text, you need to be able to open up
+your backlog of work... right? Neorg devs have a GTD system in their pipeline,
+but to create anything great you need to invest a lot of time. I am an
+inherently impatient person, so I decided to build something temporary that I
+can use in the meantime.
+
+### Rationale
+
+I don't want to deviate excessively and create new grammar to accommodate my
+GTD because if, in the future, Neorg gains its own builtin GTD feature, I want
+to minimise issues of backwards compatibility. The last thing I want is to go
+through all my old files and remove artefacts that will interfere with the new
+and definitely superior GTD implementation.
+
 ### Agenda View
+
+A new buffer that contains all the tasks in your workspace. Note that it will
+only consider tasks that are prefixed with a heading tag:
+
+```norg
+* ( ) This task is recoginsed
+
+- ( ) This task is not
+```
+
+So if you are someone who prefers to use a bullet based task listing strategy,
+this may not be the plugin for you.
+
+#### Function
+
+`NeorgUtils Agenda <task-states>`
+
+You can list out all possible Neorg task states:
+
+- `ambiguous`
+- `cancelled`
+- `done`
+- `hold`
+- `pending`
+- `important`
+- `recurring`
+- `undone`
+
+**Examples**
+
+`NeorgUtils Agenda undone pending` <- Will upon agenda view with all pending and undone tasks in current workspace.
+
+Tasks are currently segregated by the nodes they are found in. You can hit `<CR>` over the node names to navigate to those nodes as they are hyperlinks.
+
+The agenda view can be closed with `q`.
+
+### To-Do
+
+- [ ] Deadline and time based scheduling
+- [ ] Sorting by dates, tags, etc.
+- [ ] A better UI...
