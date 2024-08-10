@@ -17,6 +17,7 @@ local function create_agenda_buffer(quickfix_list)
 
     -- Loop through the quickfix list to format and insert tasks into the buffer
     for _, entry in ipairs(quickfix_list) do
+        -- Add a file header if the file has changed
         if current_file ~= entry.filename then
             if current_file then
                 table.insert(buffer_lines, "")
