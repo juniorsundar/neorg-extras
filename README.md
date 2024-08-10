@@ -5,21 +5,26 @@
   - [Installation](#installation)
     - [`lazy.nvim`](#lazynvim)
     - [Others](#others)
-  - [Features](#features)
-    - [Neorg-Roam](#neorg-roam)
-      - [Set Workspace](#set-workspace)
-        - [Function](#function)
-        - [Default Mappings](#default-mappings)
-      - [Nodes](#nodes)
-        - [Rationale](#rationale)
-          - [Use-Case](#use-case)
-        - [Function](#function)
-        - [Default Mappings](#default-mappings)
-      - [Blocks](#blocks)
-        - [Rationale](#rationale)
-      - [Backlinks](#backlinks)
-    - [Neorg-Agenda](#neorg-agenda)
-      - [Agenda View](#agenda-view)
+  - [Neorg-Roam](#neorg-roam)
+    - [Set Workspace](#set-workspace)
+      - [Function](#function)
+      - [Default Mappings](#default-mappings)
+    - [Nodes](#nodes)
+      - [Rationale](#rationale)
+        - [Use-Case](#use-case)
+      - [Function](#function)
+      - [Default Mappings](#default-mappings)
+    - [Blocks](#blocks)
+      - [Rationale](#rationale)
+      - [Use-Case](#use-case)
+      - [Function](#function)
+      - [Default Mappings](#default-mappings)
+    - [Backlinks](#backlinks)
+      - [Rationale](#rationale)
+      - [Use-Case](#use-case)
+      - [Function](#function)
+  - [Neorg-Agenda](#neorg-agenda)
+    - [Agenda View](#agenda-view)
 <!--toc:end-->
 
 > [!NOTE]
@@ -66,9 +71,7 @@ I don't use any other plugin managers. I haven't tested this with any others.
 If anyone happens to test it with `packer`, `rocks.nvim`, etc., please feel free
 to create a pull request.
 
-## Features
-
-### Neorg-Roam
+## Neorg-Roam
 
 At the moment, this feature relies heavily on the [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim) plugin.
 I have plans to liberate this plugin from the need of using Telescope, but that
@@ -86,22 +89,22 @@ plugin and simply skip the Neorg-Roam feature-set.
 > TODO In the future. I will implement a flag that will turn this off (maybe...
 > IDK).
 
-#### Set Workspace
+### Set Workspace
 
-##### Function
+#### Function
 
 `Telescope neorg_workspace_selector`
 
-##### Default Mappings
+#### Default Mappings
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Sets workspace                                                                |
 | `<C-i>`  | Sets workspace and opens the `index.norg` file in the workspace if it exists. |
 
-#### Nodes
+### Nodes
 
-##### Rationale
+#### Rationale
 
 Nodes are defined as the individual pages within a workspace. The node name is
 defined as the `title` in the page metadata. The node filename is irrelevant
@@ -122,7 +125,7 @@ link.
 You need to agree to this philosophy of managing your work to take full
 advantage of this feature.
 
-###### Use-Case
+##### Use-Case
 
 You want to navigate to a node in your workspace.
 
@@ -135,11 +138,11 @@ unique filename into a `vault` folder in the workspace root.
 > [!NOTE]
 > TODO Change the vault folder default.
 
-##### Function
+#### Function
 
 `Telescope neorg_node_injector`
 
-##### Default Mappings
+#### Default Mappings
 
 | Mappings | Action                                                                                                                         |
 |----------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -147,9 +150,9 @@ unique filename into a `vault` folder in the workspace root.
 | `<C-i>`    | Inserts hovering node into cursor location. Node's title will be concealing alias. Eg: `{:$/workspace/path/tonode:}[Title]`.     |
 | `<C-n>` | Creates new node with title of text in search bar and unique node name. |
 
-#### Blocks
+### Blocks
 
-##### Rationale
+#### Rationale
 
 Blocks are defined as the headings within a workspace. The block name is
 defined as the heading text.
@@ -165,31 +168,31 @@ something like this in the future.
 > [!NOTE]
 > TODO find ways to treat blocks as first-class citizens.
 
-##### Use-Case
+#### Use-Case
 
 You want to navigate to a block in your workspace.
 
 You want to insert the block into your cursor location as a link.
 
-##### Function
+#### Function
 
 `Telescope neorg_block_injector`
 
-##### Default Mappings
+#### Default Mappings
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Open to selected block                                                                |
 | `<C-i>`  | Inserts hovering block into cursor location. |
 
-#### Backlinks
+### Backlinks
 
-##### Rationale
+#### Rationale
 
-##### Use-Case
+#### Use-Case
 
-##### Function
+#### Function
 
-### Neorg-Agenda
+## Neorg-Agenda
 
-#### Agenda View
+### Agenda View
