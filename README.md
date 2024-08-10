@@ -1,7 +1,12 @@
 <div align="center">
 
-    # NeorgUtils
+# NeorgUtils
 
+Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
+
+</div>
+<div align="center">
+<br>
 </div>
 
 <!--toc:start-->
