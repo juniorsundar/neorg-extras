@@ -74,6 +74,11 @@ function M.neorg_node_injector()
                         title_token = condensed
                     end
                     actions.close(prompt_bufnr)
+
+                    -- Ensure the vault directory exists
+                    local vault_dir = base_directory .. "/vault/"
+                    vim.fn.mkdir(vault_dir, "p")
+
                     -- File naming tempate
                     vim.api.nvim_command(
                         "edit " ..
