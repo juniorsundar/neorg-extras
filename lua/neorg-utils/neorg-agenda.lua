@@ -11,9 +11,6 @@ local utils = require("neorg-utils.utils")
 -- Each file's tasks are grouped together, with the filename and any extracted metadata
 -- (e.g., title) displayed as a header.
 local function create_agenda_buffer(quickfix_list)
-    -- Create a new buffer for displaying the agenda
-    local buf = vim.api.nvim_create_buf(false, true)
-
     -- Initialize the lines that will be written to the buffer
     local buffer_lines = {}
     local current_file = nil
@@ -23,7 +20,7 @@ local function create_agenda_buffer(quickfix_list)
         -- Add a file header if the file has changed
         if current_file ~= entry.filename then
             if current_file then
-                table.insert(buffer_lines, "") -- Separate different files with a blank line
+                table.insert(buffer_lines, "")
             end
             -- Extract and insert file metadata (if available) or just the filename
             local file_metadata = utils.extract_file_metadata(entry.filename)
@@ -44,25 +41,7 @@ local function create_agenda_buffer(quickfix_list)
     table.insert(buffer_lines, "___")
 
     -- Write the formatted lines to the buffer
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_lines)
-
-    -- Open the buffer in a new tab and configure the buffer options
-    vim.cmd("tabnew")
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
-
-    -- Set buffer options for display and interaction
-    vim.api.nvim_set_option_value("filetype", "norg", { buf = buf })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-    vim.api.nvim_set_option_value("readonly", true, { buf = buf })
-    vim.api.nvim_set_option_value("wrap", false, { win = win })
-    vim.api.nvim_set_option_value("conceallevel", 2, { win = win })
-    vim.api.nvim_set_option_value("foldlevel", 999, { win = win })
-
-    -- Map 'q' to close the tab
-    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':tabclose<CR>', { noremap = true, silent = true })
-
-    -- Optional: Set filetype to norg for syntax highlighting (if available)
+    local buf, win = utils.create_buffer(buffer_lines)
 end
 
 -- Reads a specific line from a given file.
@@ -140,7 +119,8 @@ function M.neorg_agenda(input_list)
     local base_directory = current_workspace[2]
 
     -- Use ripgrep to find tasks in Neorg files
-    local rg_command = [[rg '\* \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]] .. base_directory
+    local rg_command = [[rg '\* \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]]
+        .. base_directory
     local rg_results = vim.fn.system(rg_command)
 
     -- Parse the ripgrep results into individual lines
@@ -149,7 +129,7 @@ function M.neorg_agenda(input_list)
         table.insert(lines, line)
     end
 
-    local quickfix_list = {}
+    local task_list = {}
 
     -- Process each line to extract relevant task information
     for _, line in ipairs(lines) do
@@ -166,7 +146,7 @@ function M.neorg_agenda(input_list)
             goto continue
         end
         if file and lnum and text then
-            table.insert(quickfix_list, {
+            table.insert(task_list, {
                 filename = file,
                 lnum = tonumber(lnum),
                 task = text,
@@ -176,7 +156,7 @@ function M.neorg_agenda(input_list)
     end
 
     -- For each task, attempt to extract additional agenda data
-    for _, qf_value in ipairs(quickfix_list) do
+    for _, qf_value in ipairs(task_list) do
         local agenda_data = extract_agenda_data(qf_value.filename, qf_value.lnum)
         if agenda_data then
             for _, entry in ipairs(agenda_data) do
@@ -194,7 +174,7 @@ function M.neorg_agenda(input_list)
     end
 
     -- Create and display the agenda buffer with the collected tasks
-    create_agenda_buffer(quickfix_list)
+    create_agenda_buffer(task_list)
 end
 
 -- Define a Neovim command 'NeorgUtils' that processes user input.

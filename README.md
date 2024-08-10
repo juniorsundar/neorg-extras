@@ -1,33 +1,37 @@
-# NeorgUtils
+<div align="center">
+
+    # NeorgUtils
+
+</div>
 
 <!--toc:start-->
-- [NeorgUtils](#neorgutils)
-  - [Installation](#installation)
-    - [`lazy.nvim`](#lazynvim)
-    - [Others](#others)
-  - [Neorg-Roam](#neorg-roam)
-    - [Set Workspace](#set-workspace)
-      - [Function](#function)
-      - [Default Mappings](#default-mappings)
-    - [Nodes](#nodes)
-      - [Rationale](#rationale)
-        - [Use-Case](#use-case)
-      - [Function](#function)
-      - [Default Mappings](#default-mappings)
-    - [Blocks](#blocks)
-      - [Rationale](#rationale)
-      - [Use-Case](#use-case)
-      - [Function](#function)
-      - [Default Mappings](#default-mappings)
-    - [Backlinks](#backlinks)
-      - [Rationale](#rationale)
-      - [Use-Case](#use-case)
-      - [Function](#function)
-  - [Neorg-Agenda](#neorg-agenda)
+- [System Prerequisites](#system-prerequisites)
+- [Installation](#installation)
+  - [`lazy.nvim`](#lazynvim)
+  - [Others](#others)
+- [Neorg-Roam](#neorg-roam)
+  - [Set Workspace](#set-workspace)
+    - [Function](#function)
+    - [Default Mappings](#default-mappings)
+  - [Nodes](#nodes)
     - [Rationale](#rationale)
-    - [Agenda View](#agenda-view)
-      - [Function](#function)
-    - [To-Do](#to-do)
+    - [Use-Case](#use-case)
+    - [Function](#function)
+    - [Default Mappings](#default-mappings)
+  - [Blocks](#blocks)
+    - [Rationale](#rationale)
+    - [Use-Case](#use-case)
+    - [Function](#function)
+    - [Default Mappings](#default-mappings)
+  - [Backlinks](#backlinks)
+    - [Rationale](#rationale)
+    - [Use-Case](#use-case)
+    - [Function](#function)
+- [Neorg-Agenda](#neorg-agenda)
+  - [Rationale](#rationale)
+  - [Agenda View](#agenda-view)
+    - [Function](#function)
+  - [To-Do](#to-do)
 <!--toc:end-->
 
 > [!NOTE]
@@ -43,11 +47,16 @@
 > They may not be the right or most optimal way to do things, but it works for
 > me. So, use at your own risk.
 
-## Installation
+# System Prerequisites
+
+- ripgrep [`rg`](https://github.com/BurntSushi/ripgrep)
+- fd [`fd`](https://github.com/sharkdp/fd)
+
+# Installation
 
 This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installation.
 
-### `lazy.nvim`
+## `lazy.nvim`
 
 ```lua
 return {
@@ -68,13 +77,13 @@ return {
 }
 ```
 
-### Others
+## Others
 
 I don't use any other plugin managers. I haven't tested this with any others.
 If anyone happens to test it with `packer`, `rocks.nvim`, etc., please feel free
 to create a pull request.
 
-## Neorg-Roam
+# Neorg-Roam
 
 At the moment, this feature relies heavily on the [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim) plugin.
 I have plans to liberate this plugin from the need of using Telescope, but that
@@ -92,22 +101,22 @@ plugin and simply skip the Neorg-Roam feature-set.
 > TODO In the future. I will implement a flag that will turn this off (maybe...
 > IDK).
 
-### Set Workspace
+## Set Workspace
 
-#### Function
+### Function
 
 `Telescope neorg_workspace_selector`
 
-#### Default Mappings
+### Default Mappings
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Sets workspace.                                                               |
 | `<C-i>`  | Sets workspace and opens the `index.norg` file in the workspace if it exists. |
 
-### Nodes
+## Nodes
 
-#### Rationale
+### Rationale
 
 Nodes are defined as the individual pages within a workspace. The node name is
 defined as the `title` in the page metadata. The node filename is irrelevant
@@ -128,7 +137,7 @@ link.
 You need to agree to this philosophy of managing your work to take full
 advantage of this feature.
 
-##### Use-Case
+### Use-Case
 
 You want to navigate to a node in your workspace.
 
@@ -141,11 +150,11 @@ unique filename into a `vault` folder in the workspace root.
 > [!NOTE]
 > TODO Change the vault folder default.
 
-#### Function
+### Function
 
 `Telescope neorg_node_injector`
 
-#### Default Mappings
+### Default Mappings
 
 | Mappings | Action                                                                                                                         |
 |----------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -153,9 +162,9 @@ unique filename into a `vault` folder in the workspace root.
 | `<C-i>`    | Inserts hovering node into cursor location. Node's title will be concealing alias. Eg: `{:$/workspace/path/tonode:}[Title]`.     |
 | `<C-n>` | Creates new node with title of text in search bar and unique node name. |
 
-### Blocks
+## Blocks
 
-#### Rationale
+### Rationale
 
 Blocks are defined as the headings within a workspace. The block name is
 defined as the heading text.
@@ -171,26 +180,26 @@ something like this in the future.
 > [!NOTE]
 > TODO find ways to treat blocks as first-class citizens.
 
-#### Use-Case
+### Use-Case
 
 You want to navigate to a block in your workspace.
 
 You want to insert the block into your cursor location as a link.
 
-#### Function
+### Function
 
 `Telescope neorg_block_injector`
 
-#### Default Mappings
+### Default Mappings
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Open to selected block.                                                                |
 | `<C-i>`  | Inserts hovering block into cursor location. |
 
-### Backlinks
+## Backlinks
 
-#### Rationale
+### Rationale
 
 Since we are swearing off the file-tree, we need a way to conveniently navigate between nodes. The backlinks offer us an insight into the ways we can get to the current node.
 
@@ -203,17 +212,17 @@ Since we are swearing off the file-tree, we need a way to conveniently navigate 
 > 
 > TODO change this into a read-only buffer that can be toggled.
 
-#### Use-Case
+### Use-Case
 
 You want to determine all backlinks to current node, preview them, and navigate to them.
 
-#### Function
+### Function
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Open to selected backlink location.                                           |
 
-## Neorg-Agenda
+# Neorg-Agenda
 
 In order to organise your life in plain-text, you need to be able to open up
 your backlog of work... right? Neorg devs have a GTD system in their pipeline,
@@ -221,7 +230,7 @@ but to create anything great you need to invest a lot of time. I am an
 inherently impatient person, so I decided to build something temporary that I
 can use in the meantime.
 
-### Rationale
+## Rationale
 
 I don't want to deviate excessively and create new grammar to accommodate my
 GTD because if, in the future, Neorg gains its own builtin GTD feature, I want
@@ -229,7 +238,7 @@ to minimise issues of backwards compatibility. The last thing I want is to go
 through all my old files and remove artefacts that will interfere with the new
 and definitely superior GTD implementation.
 
-### Agenda View
+## Agenda View
 
 A new buffer that contains all the tasks in your workspace. Note that it will
 only consider tasks that are prefixed with a heading tag:
@@ -237,13 +246,13 @@ only consider tasks that are prefixed with a heading tag:
 ```norg
 * ( ) This task is recoginsed
 
-- ( ) This task is not
+- ( ) This task is not ... yet
 ```
 
 So if you are someone who prefers to use a bullet based task listing strategy,
 this may not be the plugin for you.
 
-#### Function
+### Function
 
 `NeorgUtils Agenda <task-states>`
 
@@ -260,13 +269,13 @@ You can list out all possible Neorg task states:
 
 **Examples**
 
-`NeorgUtils Agenda undone pending` <- Will upon agenda view with all pending and undone tasks in current workspace.
+`NeorgUtils Agenda undone pending` <- Will open agenda view with all pending and undone tasks in current workspace.
 
 Tasks are currently segregated by the nodes they are found in. You can hit `<CR>` over the node names to navigate to those nodes as they are hyperlinks.
 
 The agenda view can be closed with `q`.
 
-### To-Do
+## To-Do
 
 - [ ] Deadline and time based scheduling
 - [ ] Sorting by dates, tags, etc.
