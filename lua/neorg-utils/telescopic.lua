@@ -182,8 +182,25 @@ function M.neorg_block_injector()
                     local base_path = base_directory:gsub("([^%w])", "%%%1")
                     local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
                     -- Insert at the cursor location
+                    local heading_text = "%(.-%)%s*"
+                    -- Check task extract the string after them
+                    local heading_if_task = string.match(entry.line, "%)%s*(.+)")
+                    if not heading_if_task then
+                        -- If not, the entire line is the string
+                        heading_if_task = entry.line:gsub("^%s*(.-)%s*$", "%1")
+                    end
+                    -- Remove the content inside the parentheses and the parentheses themselves
+                    local string_without_parentheses = string.gsub(entry.line, heading_text, "")
+                    string_without_parentheses = string_without_parentheses:gsub("^%s*(.-)%s*$", "%1")
                     actions.close(prompt_bufnr)
-                    vim.api.nvim_put({ "{:$/" .. rel_path .. ":" .. entry.line .. "}[" .. entry.line .. "]" }, "", false,
+                    vim.api.nvim_put({ "{:$/" ..
+                        rel_path ..
+                        ":" ..
+                        string_without_parentheses ..
+                        "}[" ..
+                        heading_if_task ..
+                        "]" }, "", false,
+                        -- vim.api.nvim_put({ "{:$/" .. rel_path .. ":" .. entry.line .. "}[" .. entry.line .. "]" }, "", false,
                         true)
                 end)
                 return true
