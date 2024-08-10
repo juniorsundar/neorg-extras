@@ -24,7 +24,10 @@
       - [Use-Case](#use-case)
       - [Function](#function)
   - [Neorg-Agenda](#neorg-agenda)
+    - [Rationale](#rationale)
     - [Agenda View](#agenda-view)
+      - [Function](#function)
+    - [To-Do](#to-do)
 <!--toc:end-->
 
 > [!NOTE]
