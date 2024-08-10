@@ -257,9 +257,13 @@ only consider tasks that are prefixed with a heading tag:
 So if you are someone who prefers to use a bullet based task listing strategy,
 this may not be the plugin for you.
 
-### Function
+### Page View
 
-`NeorgUtils Agenda <task-states>`
+![Neorg Page View](https://i.imgur.com/Hql5Pet.png)
+
+This will show all tasks filtered by the provided task states and turn it into a paginated view.
+
+`NeorgUtils Page <task-states>`
 
 You can list out all possible Neorg task states:
 
@@ -274,11 +278,22 @@ You can list out all possible Neorg task states:
 
 **Examples**
 
-`NeorgUtils Agenda undone pending` <- Will open agenda view with all pending and undone tasks in current workspace.
+`NeorgUtils Page undone pending` <- Will open agenda view with all pending
+and undone tasks in current workspace.
 
-Tasks are currently segregated by the nodes they are found in. You can hit `<CR>` over the node names to navigate to those nodes as they are hyperlinks.
+Tasks are currently segregated by the nodes they are found in. You can hit
+`<CR>` over the node names to navigate to those nodes as they are hyperlinks.
 
 The agenda view can be closed with `q`.
+
+### Day View
+
+![Neorg Day View](https://i.imgur.com/oFZmfd0.png)
+
+This will sort tasks according to a day view. Something similar to
+`org-agenda` but with my own flavour.
+
+`NeorgUtils Day`
 
 ## To-Do
 
