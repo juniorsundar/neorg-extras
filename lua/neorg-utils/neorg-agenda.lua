@@ -1,13 +1,12 @@
 local M = {}
 
--- Ensure Neorg is loaded; otherwise, throw an error
+-- Load Neorg; assert if not loaded
 local neorg_loaded, neorg = pcall(require, "neorg.core")
 assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
 
 local utils = require("neorg-utils.utils")
 
--- Reads a specific line from a given file.
--- The function iterates through the file's lines until the specified line number is reached.
+-- Reads a specific line from a file
 local function read_line(file, line_number)
     local current_line = 0
     for line in file:lines() do
@@ -19,9 +18,7 @@ local function read_line(file, line_number)
     return nil
 end
 
--- Extracts agenda-related data from a file, starting from a specific line.
--- If the line following the specified one contains '@data agenda', the function
--- collects lines until it encounters '@end'. It returns the extracted lines or nil if not found.
+-- Extracts agenda data from a file, starting from a specific line
 local function extract_agenda_data(filename, line_number)
     local file = io.open(filename, "r")
     if not file then
@@ -69,7 +66,7 @@ local function filter_tasks(input_list)
         ["?"] = "",
     }
 
-    -- Filter out the agenda states provided in the input_list
+    -- Filter out specified states from agenda_states
     local filtered_states = {}
     for _, state in ipairs(agenda_states) do
         local found = false
@@ -84,7 +81,7 @@ local function filter_tasks(input_list)
         end
     end
 
-    -- Get the current Neorg workspace and its base directory
+    -- Get current Neorg workspace directory
     local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
     local base_directory = current_workspace[2]
 
@@ -93,7 +90,7 @@ local function filter_tasks(input_list)
     .. base_directory
     local rg_results = vim.fn.system(rg_command)
 
-    -- Parse the ripgrep results into individual lines
+    -- Parse ripgrep results into lines
     local lines = {}
     for line in rg_results:gmatch("[^\r\n]+") do
         table.insert(lines, line)
@@ -101,7 +98,7 @@ local function filter_tasks(input_list)
 
     local task_list = {}
 
-    -- Process each line to extract relevant task information
+    -- Process lines to extract task information
     for _, line in ipairs(lines) do
         local file, lnum, text = line:match("([^:]+):(%d+):(.*)")
         local task_state = text:match("%((.)%)")
@@ -126,7 +123,7 @@ local function filter_tasks(input_list)
         ::continue::
     end
 
-    -- For each task, attempt to extract additional agenda data
+    -- Extract additional agenda data for each task
     for _, task_value in ipairs(task_list) do
         local agenda_data = extract_agenda_data(task_value.filename, task_value.lnum)
         if agenda_data then
@@ -136,8 +133,6 @@ local function filter_tasks(input_list)
                     if key == "started" or key == "completed" or key == "deadline" then
                         local year, month, day, hour, minute = string.match(value,
                             "(%d%d%d%d)%-(%d%d)%-(%d%d)|(%d%d):(%d%d)")
-                        -- local date, time = value:match("([^|]+)|([^|]+)")
-                        -- task_value[key] = { date = date, time = time }
                         task_value[key] = {
                             year = tonumber(year),
                             month = tonumber(month),
@@ -147,8 +142,6 @@ local function filter_tasks(input_list)
                         }
                     elseif key == "tag" and value ~= "" then
                         local tags = {}
-
-                        -- Use gmatch to iterate over the tags, trimming any leading/trailing spaces
                         for tag in string.gmatch(value, "%s*(%w+)%s*") do
                             table.insert(tags, tag)
                         end
@@ -164,25 +157,20 @@ local function filter_tasks(input_list)
     return task_list
 end
 
--- Main function to generate an agenda from Neorg files.
--- It searches for tasks within Neorg files based on specified states, filters them,
--- and displays the resulting tasks in a new buffer.
+-- Generate agenda from Neorg files
 function M.page_view(input_list)
     local task_list = filter_tasks(input_list)
 
-    -- Create and display the agenda buffer with the collected tasks
-    -- Initialize the lines that will be written to the buffer
+    -- Create and display agenda buffer
     local buffer_lines = {}
     local current_file = nil
 
-    -- Loop through the quickfix list to format and insert tasks into the buffer
+    -- Format and insert tasks into the buffer
     for _, entry in ipairs(task_list) do
-        -- Add a file header if the file has changed
         if current_file ~= entry.filename then
             if current_file then
                 table.insert(buffer_lines, "")
             end
-            -- Extract and insert file metadata (if available) or just the filename
             local file_metadata = utils.extract_file_metadata(entry.filename)
             table.insert(buffer_lines, "___")
             table.insert(buffer_lines, "")
@@ -193,14 +181,12 @@ function M.page_view(input_list)
             end
             current_file = entry.filename
         end
-        -- Insert the task description
         table.insert(buffer_lines, entry.task)
     end
-    -- End the buffer with a separator line
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "___")
 
-    -- Write the formatted lines to the buffer
+    -- Write formatted lines to the buffer
     local buf, win = utils.create_buffer(buffer_lines)
 end
 
@@ -280,7 +266,6 @@ function M.day_agenda()
                 table.insert(miscellaneous, task)
             end
         else
-            -- Handle tasks with missing deadline information
             table.insert(miscellaneous, task)
         end
     end
@@ -542,17 +527,14 @@ function M.day_agenda()
         line_str = line_str .. " :: " .. tags_str
         table.insert(buffer_lines, line_str)
     end
-    -- Additional code for handling 'this_week', 'next_week', and 'miscellaneous' tasks
 
     local buf, win = utils.create_buffer(buffer_lines)
 end
 
--- Define a Neovim command 'NeorgUtils' that processes user input.
--- If the first argument is "Agenda", it triggers the agenda generation function.
+-- Define Neovim command 'NeorgUtils' to process user input
 vim.api.nvim_create_user_command(
     'NeorgUtils',
     function(opts)
-        -- Split the input into a list of strings
         local input_list = vim.split(opts.args, ' ')
         if input_list[1] == "Page" then
             local _ = table.remove(input_list, 1)
@@ -563,7 +545,7 @@ vim.api.nvim_create_user_command(
             vim.notify("Invalid command!", vim.log.levels.ERROR)
         end
     end,
-    { nargs = '+' }     -- Allow one or more arguments
+    { nargs = '+' }
 )
 
 return M
