@@ -28,6 +28,115 @@ function M.create_buffer(buffer_lines)
     return buf, win
 end
 
+function M.inject_prop_metadata()
+    return [[
+        @data property
+        id:
+        started:
+        completed:
+        deadline:
+        tag:
+        priority:
+        @end
+        ]]
+end
+
+local function is_prop_metadata(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    local parser = vim.treesitter.get_parser(bufnr, 'norg')
+    local tree = parser:parse()[1]
+
+    -- Get the current cursor position
+    local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0))
+    cursor_row = cursor_row - 1
+
+    -- Define the query for all heading levels
+    local heading_query_string = [[
+    (heading6) @heading6
+    (heading5) @heading5
+    (heading4) @heading4
+    (heading3) @heading3
+    (heading2) @heading2
+    (heading1) @heading1
+  ]]
+
+    -- Define the query for ranged_verbatim_tag
+    local verbatim_query_string = [[
+    (ranged_verbatim_tag
+        name: (tag_name) @tag_name
+        (tag_parameters
+          (tag_param) @tag_parameter))
+  ]]
+
+    -- Create the query object for headings and tags
+    local heading_query = vim.treesitter.query.parse('norg', heading_query_string)
+    local verbatim_query = vim.treesitter.query.parse('norg', verbatim_query_string)
+
+    local node_tree = {}
+    for _, node, _, _ in heading_query:iter_captures(tree:root(), bufnr, 0, -1) do
+        local row1, _, row2, _ = node:range()
+        if row1 < cursor_row and row2 >= cursor_row then
+            table.insert(node_tree, node)
+        end
+    end
+    local is_ranged_verbatim = false
+    local is_property = false
+    local property_line = nil
+    local heading_line = nil
+    if #node_tree > 0 then
+        heading_line = node_tree[#node_tree]:range() + 1
+    end
+    for child in node_tree[#node_tree]:iter_children() do
+        local hrow1, _, _, _ = child:range()
+        if child:type() == "ranged_verbatim_tag" then
+            for _, node, _, _ in verbatim_query:iter_captures(tree:root(), bufnr, 0, -1) do
+                local vrow1, _, _, _ = node:range()
+                if hrow1 == vrow1 then
+                    local node_text = vim.treesitter.get_node_text(node, bufnr)
+                    if node_text == "data" then
+                        is_ranged_verbatim = true
+                    else
+                        is_property = true
+                        property_line = vrow1 + 1
+                    end
+                end
+            end
+        end
+    end
+    if is_ranged_verbatim and is_property then
+        return true, property_line, heading_line
+    else
+        return false, property_line, heading_line
+    end
+end
+
+
+function M.update_prop_metadata()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+
+    -- Create a new floating window with the same buffer
+    local opts = {
+        relative = "cursor",
+        width = 1,
+        height = 1,
+        row = 1,
+        col = 0,
+        style = "minimal",
+        focusable = false,
+    }
+    local win = vim.api.nvim_open_win(bufnr, true, opts)
+    vim.api.nvim_win_set_cursor(win, { cursor_pos[1] + 1, 0 })
+
+    -- Check if there is property metadata
+    local value, property_line, heading_line = is_prop_metadata(bufnr)
+
+    vim.api.nvim_win_close(win, true)
+    vim.api.nvim_win_set_cursor(0, cursor_pos)
+    if value then
+        vim.notify(tostring(value) .. "-" .. property_line .. "-" .. heading_line)
+    end
+end
 
 -- Function to extract metadata from a Neorg file.
 -- This function reads the entire content of a Neorg file and attempts to extract
