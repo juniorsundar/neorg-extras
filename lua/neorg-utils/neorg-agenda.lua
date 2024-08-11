@@ -6,42 +6,6 @@ assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first
 
 local utils = require("neorg-utils.utils")
 
--- Reads a specific line from a file
-local function read_line(file, line_number)
-    local current_line = 0
-    for line in file:lines() do
-        current_line = current_line + 1
-        if current_line == line_number then
-            return line
-        end
-    end
-    return nil
-end
-
--- Extracts agenda data from a file, starting from a specific line
-local function extract_agenda_data(filename, line_number)
-    local file = io.open(filename, "r")
-    if not file then
-        vim.notify("Error opening file: " .. filename, vim.log.levels.ERROR)
-        return nil
-    end
-
-    local next_line = read_line(file, line_number + 1)
-    if next_line and string.match(next_line, "@data property") then
-        local agenda_lines = {}
-        for line in file:lines() do
-            if string.match(line, "@end") then
-                break
-            end
-            table.insert(agenda_lines, line)
-        end
-        file:close()
-        return agenda_lines
-    else
-        file:close()
-        return nil
-    end
-end
 
 local function filter_tasks(input_list)
     local agenda_states = {
@@ -125,32 +89,9 @@ local function filter_tasks(input_list)
 
     -- Extract additional agenda data for each task
     for _, task_value in ipairs(task_list) do
-        local agenda_data = extract_agenda_data(task_value.filename, task_value.lnum)
-        if agenda_data then
-            for _, entry in ipairs(agenda_data) do
-                for line in string.gmatch(entry, "[^\r\n]+") do
-                    local key, value = line:match("^%s*([^:]+):%s*(.*)")
-                    if key == "started" or key == "completed" or key == "deadline" then
-                        local year, month, day, hour, minute = string.match(value,
-                            "(%d%d%d%d)%-(%d%d)%-(%d%d)|(%d%d):(%d%d)")
-                        task_value[key] = {
-                            year = tonumber(year),
-                            month = tonumber(month),
-                            day = tonumber(day),
-                            hour = tonumber(hour),
-                            minute = tonumber(minute)
-                        }
-                    elseif key == "tag" and value ~= "" then
-                        local tags = {}
-                        for tag in string.gmatch(value, "%s*(%w+)%s*") do
-                            table.insert(tags, tag)
-                        end
-                        task_value[key] = tags
-                    else
-                        task_value[key] = value
-                    end
-                end
-            end
+        local agenda_data = utils.extract_property_data(task_value.filename, task_value.lnum)
+        for key, value in pairs(agenda_data) do
+            task_value[key] = value
         end
     end
 
@@ -204,24 +145,25 @@ function M.day_view()
         sec = 0,
     }
 
-    local day_of_week = os.date("%A", os.time(timetable))
-    local week_number = os.date("%U", os.time(timetable))
-    local current_weekday = tonumber(os.date("%w"))
-    local days_to_end_of_week = 7 - current_weekday
-    local end_of_week_timestamp = os.time(timetable) + (days_to_end_of_week * 24 * 60 * 60)
-    local end_of_week = {
-        year = tonumber(os.date("%Y", end_of_week_timestamp)),
-        month = tonumber(os.date("%m", end_of_week_timestamp)),
-        day = tonumber(os.date("%d", end_of_week_timestamp))
-    }
+    -- Get the current weekday and adjust it to treat Monday as the start of the week
+    local current_weekday = tonumber(os.date("%w", os.time(timetable)))
+    current_weekday = (current_weekday == 0) and 7 or
+    current_weekday                                                   -- Adjust Sunday (0) to be the last day of the week (7)
+
+    -- Calculate the start of the week (Monday)
+    local start_of_week_timestamp = os.time(timetable) - ((current_weekday - 1) * 24 * 60 * 60)
+    local end_of_week_timestamp = start_of_week_timestamp + (6 * 24 * 60 * 60) -- End of the week (Sunday)
+
+    -- Calculate the end of next week (Sunday of the next week)
+    local end_of_next_week_timestamp = end_of_week_timestamp + (7 * 24 * 60 * 60)
 
     local buffer_lines = {}
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "___")
     table.insert(buffer_lines, "* Today's Schedule")
-    table.insert(buffer_lines, "  /" .. day_of_week .. "/ == /" .. year ..
-        "-" .. month .. "-" .. day .. "/ == /wk" .. week_number .. "/")
+    table.insert(buffer_lines, "  /" .. os.date("%A", os.time(timetable)) .. "/ == /" .. year ..
+        "-" .. month .. "-" .. day .. "/ == /wk" .. os.date("%U", os.time(timetable)) .. "/")
     table.insert(buffer_lines, "___")
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
@@ -241,26 +183,21 @@ function M.day_view()
             local task_time = os.time({
                 year = task.deadline.year,
                 month = task.deadline.month,
-                day = task.deadline.day
+                day = task.deadline.day,
+                hour = 0,
+                min = 0,
+                sec = 0,
             })
 
             if task_time < current_time then
-                if task.deadline.day == day then
+                if task.deadline.day == day and task.deadline.month == month and task.deadline.year == year then
                     table.insert(today, task)
                 else
                     table.insert(overdue, task)
                 end
-            elseif task_time <= os.time({
-                    year = end_of_week.year,
-                    month = end_of_week.month,
-                    day = end_of_week.day
-                }) then
+            elseif task_time <= end_of_week_timestamp then
                 table.insert(this_week, task)
-            elseif task_time <= os.time({
-                    year = end_of_week.year,
-                    month = end_of_week.month,
-                    day = end_of_week.day + 7
-                }) then
+            elseif task_time <= end_of_next_week_timestamp then
                 table.insert(next_week, task)
             else
                 table.insert(miscellaneous, task)
@@ -439,7 +376,6 @@ function M.day_view()
             end
             table.insert(buffer_lines, line_str)
         end
-
     end
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
@@ -516,7 +452,8 @@ function M.day_view()
     table.insert(buffer_lines, "** Miscellaneous")
     for _, task in ipairs(miscellaneous) do
         local unscheduled_str = "*"
-        unscheduled_str = unscheduled_str .. "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+        unscheduled_str = unscheduled_str ..
+        "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
 
         local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
         local tags_str = "`untagged`"
