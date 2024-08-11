@@ -27,7 +27,7 @@ local function extract_agenda_data(filename, line_number)
     end
 
     local next_line = read_line(file, line_number + 1)
-    if next_line and string.match(next_line, "@data agenda") then
+    if next_line and string.match(next_line, "@data property") then
         local agenda_lines = {}
         for line in file:lines() do
             if string.match(line, "@end") then
@@ -190,7 +190,7 @@ function M.page_view(input_list)
     local buf, win = utils.create_buffer(buffer_lines)
 end
 
-function M.day_agenda()
+function M.day_view()
     local year = tonumber(os.date("%Y"))
     local month = tonumber(os.date("%m"))
     local day = tonumber(os.date("%d"))
@@ -540,7 +540,7 @@ vim.api.nvim_create_user_command(
             local _ = table.remove(input_list, 1)
             M.page_view(input_list)
         elseif input_list[1] == "Day" then
-            M.day_agenda()
+            M.day_view()
         else
             vim.notify("Invalid command!", vim.log.levels.ERROR)
         end
