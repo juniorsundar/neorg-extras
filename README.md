@@ -341,9 +341,9 @@ This function is multi-purpose:
 1. It can add the property tag to the current heading if it doesn't have one
    already.
 2. It will update the property tag under the current heading if it has one
-   already.
+   already
 
-   #### Sorting-out my Life
+#### Sorting-out my Life
 
 I would suggest that you open your Day View (TM) and start going through your
 uncategorised tasks and start assigning them a started and deadline property.
