@@ -142,11 +142,9 @@ function M.create_buffer(buffer_lines)
     -- Create a new buffer for displaying the agenda
     local buf = vim.api.nvim_create_buf(false, true)
 
-    -- Open the buffer in a new tab and configure the buffer options
     vim.cmd("tabnew")
     local win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(win, buf)
-
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_lines)
 
     -- Set buffer options for display and interaction
@@ -161,22 +159,22 @@ function M.create_buffer(buffer_lines)
 
     -- Function to handle buffer leave event
     local function on_buf_leave()
-        local file = vim.api.nvim_buf_get_name(0)  -- Get current buffer's file name
-        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))  -- Get current cursor position
+        local file = vim.api.nvim_buf_get_name(0)
+        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
 
-        vim.cmd("tabclose")  -- Close current tab
+        vim.cmd("tabclose")
 
         -- Reopen the file in the previous tab
-        vim.cmd("tabprevious")  -- Go back to the previous tab
-        vim.cmd("edit " .. file)  -- Open the file
-        vim.api.nvim_win_set_cursor(0, {row, 0})  -- Restore the cursor position
+        vim.cmd("tabprevious")
+        vim.cmd("edit " .. file)
+        vim.api.nvim_win_set_cursor(0, {row, 0})
     end
 
     -- Setup an autocommand to observe buffer changes and trigger the function
     vim.api.nvim_create_autocmd("BufLeave", {
         buffer = buf,
         callback = on_buf_leave,
-        once = true,  -- Only trigger once
+        once = true,
     })
 
     return buf, win
@@ -186,14 +184,12 @@ local function push_new_property_text(row, props)
     local bufnr = vim.api.nvim_get_current_buf()
     local text = {}
 
-    -- Add the initial @data property line with the row number
     table.insert(text, "@data property")
     for key, value in pairs(props) do
         table.insert(text, key .. ": " .. value)
     end
     table.insert(text, "@end")
 
-    -- Combine all parts into a single string with new lines + autoindent
     local push_text = table.concat(text, "\n")
     local lines = vim.split(push_text, "\n")
     vim.api.nvim_buf_set_lines(bufnr, row, row, false, lines)
@@ -344,14 +340,12 @@ end
 -- the metadata block defined between "@document.meta" and "@end". If the metadata
 -- is found, it decodes the metadata into a table; otherwise, it returns nil.
 function M.extract_file_metadata(norg_address)
-    -- Open the Neorg file for reading
     local file = io.open(norg_address, "r")
     if not file then
         print("Could not open file: " .. norg_address)
         return nil
     end
 
-    -- Read the entire file content into a string
     local content = file:read("*all")
     file:close()
 
@@ -362,7 +356,6 @@ function M.extract_file_metadata(norg_address)
         return nil
     end
 
-    -- Decode the metadata block into a table and return it
     return M.decode_metadata(metadata_block)
 end
 
@@ -378,27 +371,21 @@ function M.decode_metadata(metadata_block)
 
     -- Iterate through each line of the metadata block
     for line in metadata_block:gmatch("[^\r\n]+") do
-        -- Check if currently parsing categories
         if in_categories then
             if line:match("%]") then
-                -- End of categories
                 in_categories = false
                 metadata["categories"] = categories
                 categories = {}
             else
-                -- Add category item to the list
                 table.insert(categories, line:match("%s*(.-)%s*$"))
             end
         else
-            -- Parse key-value pairs from the line
             local key, value = line:match("^%s*(%w+):%s*(.-)%s*$")
             if key and value then
                 if key == "categories" then
-                    -- Start of categories block
                     in_categories = true
                     local initial_values = value:match("%[(.-)%]")
                     if initial_values then
-                        -- Parse initial categories within the same line
                         for item in initial_values:gmatch("[^,%s]+") do
                             table.insert(categories, item)
                         end
@@ -407,7 +394,6 @@ function M.decode_metadata(metadata_block)
                         categories = {}
                     end
                 else
-                    -- Regular key-value pair
                     metadata[key] = value
                 end
             end
