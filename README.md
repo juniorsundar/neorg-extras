@@ -10,6 +10,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 </div>
 
 <!--toc:start-->
+- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -35,8 +36,12 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 - [Neorg-Agenda](#neorg-agenda)
   - [Rationale](#rationale)
   - [Agenda View](#agenda-view)
-    - [Function](#function)
-  - [To-Do](#to-do)
+    - [Page View](#page-view)
+    - [Day View (TM)](#day-view-tm)
+      - [The View](#the-view)
+      - [The Property Metadata](#the-property-metadata)
+      - [Sorting-out my Life](#sorting-out-my-life)
+- [To-Do](#to-do)
 <!--toc:end-->
 
 > [!NOTE]
@@ -67,7 +72,7 @@ This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installat
 return {
     "nvim-neorg/neorg",
     dependencies = {
-        { "juniorsundar/neorg_utils", opts = {} }, -- opts will have some use later
+        { "juniorsundar/neorg_extras", opts = {} }, -- opts will have some use later
         "nvim-telescope/telescope.nvim", -- Required for the Neorg-Roam features
         "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
     },
@@ -286,7 +291,9 @@ Tasks are currently segregated by the nodes they are found in. You can hit
 
 The agenda view can be closed with `q`.
 
-### Day View
+### Day View (TM)
+
+#### The View
 
 ![Neorg Day View](https://i.imgur.com/oFZmfd0.png)
 
@@ -295,7 +302,55 @@ This will sort tasks according to a day view. Something similar to
 
 `NeorgExtras Day`
 
-## To-Do
+You will notice that all of your tasks in the workspace are uncategorised. This
+is because we haven't added the property `ranged_verbatim_tag` that is used
+in this plugin-plugin (plugin^2?) to define the sorting categories for the
+agenda.
+
+Note that the method I am using to assign "metadata" to tasks is not the
+official way to do things. That is still awaiting an update of the tree-sitter
+parser. I don't know how long that will take. And as someone who wants to
+organise their life yesterday, I can't afford to wait that long. Hence:
+
+#### The Property Metadata
+
+```norg
+@data property
+started: YYYY-MM-DD|HH:MM
+completed: YYYY-MM-DD|HH:MM
+deadline: YYYY-MM-DD|HH:MM
+tag: tag1, tag2, ...
+priority: A/B/C ...
+@end
+```
+
+Fair warning, this verbose property tag will not conceal, so you are going to
+have this chunk in your view. You should decide if you can live with that.
+Because if you can, only then can you access the Day View (TM).
+
+Of course, this plug(plugin)in(?) makes your life a lot easier by exposing the
+following function:
+
+`NeorgExtras Metadata update`
+
+This function doesn't discriminate between task headings or regular headings
+(at the moment... I will fix that later).
+
+This function is multi-purpose:
+
+1. It can add the property tag to the current heading if it doesn't have one
+   already.
+2. It will update the property tag under the current heading if it has one
+   already.
+
+   #### Sorting-out my Life
+
+I would suggest that you open your Day View (TM) and start going through your
+uncategorised tasks and start assigning them a started and deadline property.
+Maybe add a tag? You could also add a property (but I haven't implemented
+support for finer sorting yet).
+
+# To-Do
 
 - [ ] Deadline and time based scheduling
 - [ ] Sorting by dates, tags, etc.
