@@ -135,7 +135,6 @@ function M.extract_property_data(filename, line_number)
     else
         file:close()
     end
-
     return encode_metadata_text(agenda_lines)
 end
 
@@ -160,8 +159,26 @@ function M.create_buffer(buffer_lines)
     vim.api.nvim_set_option_value("number", false, { win = win })
     vim.api.nvim_set_option_value("relativenumber", false, { win = win })
 
-    -- Map 'q' to close the tab
-    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':tabclose<CR>', { noremap = true, silent = true })
+    -- Function to handle buffer leave event
+    local function on_buf_leave()
+        local file = vim.api.nvim_buf_get_name(0)  -- Get current buffer's file name
+        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))  -- Get current cursor position
+
+        vim.cmd("tabclose")  -- Close current tab
+
+        -- Reopen the file in the previous tab
+        vim.cmd("tabprevious")  -- Go back to the previous tab
+        vim.cmd("edit " .. file)  -- Open the file
+        vim.api.nvim_win_set_cursor(0, {row, 0})  -- Restore the cursor position
+    end
+
+    -- Setup an autocommand to observe buffer changes and trigger the function
+    vim.api.nvim_create_autocmd("BufLeave", {
+        buffer = buf,
+        callback = on_buf_leave,
+        once = true,  -- Only trigger once
+    })
+
     return buf, win
 end
 
@@ -207,10 +224,11 @@ local function update_old_property_metadata(prop_table)
         local prop_string = {}
         for key, value in pairs(fields) do
             if key == "started" or key == "deadline" or key == "completed" then
-                if value then
+                if value or not prop_table[key] then
                     vim.ui.input({ prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): " }, function(input)
-                        -- table.insert(prop_string, key .. ": " .. input)
-                        prop_string[key] = input
+                        if input ~= "" then
+                            prop_string[key] = input
+                        end
                     end)
                 else
                     local text = prop_table[key].year ..
@@ -219,37 +237,39 @@ local function update_old_property_metadata(prop_table)
                         "-" .. prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
                     vim.ui.input({ prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", default = text },
                         function(input)
-                            -- table.insert(prop_string, key .. ": " .. input)
-                            prop_string[key] = input
+                            if input ~= "" then
+                                prop_string[key] = input
+                            end
                         end)
                 end
             elseif key == "tag" then
-                if value then
-                    local tags = ""
-                    for _, tag in ipairs(prop_table["tag"]) do
-                        tags = tags .. ", " .. tag
-                    end
+                if value or not prop_table[key] then
+                    vim.ui.input({ prompt = "Enter comma-separated tags (tag1, tag2, ...): " }, function(input)
+                        if input ~= "" then
+                            prop_string[key] = input
+                        end
+                    end)
+                else
+                    local tags = table.concat(prop_table[key], ", ")
                     vim.ui.input({ prompt = "Enter comma-separated tags (tag1, tag2, ...): ", default = tags },
                         function(input)
-                            -- table.insert(prop_string, key .. ": " .. input)
-                            prop_string[key] = input
+                            if input ~= "" then
+                                prop_string[key] = input
+                            end
                         end)
-                else
-                    vim.ui.input({ prompt = "Enter comma-separated tags (tag1, tag2, ...): " }, function(input)
-                        -- table.insert(prop_string, key .. ": " .. input)
-                        prop_string[key] = input
-                    end)
                 end
             else
-                if value then
+                if value or not prop_table[key] then
                     vim.ui.input({ prompt = "Enter priority (A/B/C/...): " }, function(input)
-                        -- table.insert(prop_string, key .. ": " .. input)
-                        prop_string[key] = input
+                        if input ~= "" then
+                            prop_string[key] = input
+                        end
                     end)
                 else
                     vim.ui.input({ prompt = "Enter priority (A/B/C/...): ", default = prop_table[key] }, function(input)
-                        -- table.insert(prop_string, key .. ": " .. input)
-                        prop_string[key] = input
+                        if input ~= "" then
+                            prop_string[key] = input
+                        end
                     end)
                 end
             end

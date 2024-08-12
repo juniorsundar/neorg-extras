@@ -1,6 +1,6 @@
 <div align="center">
 
-# NeorgUtils
+# NeorgExtras
 
 Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
 
@@ -263,7 +263,7 @@ this may not be the plugin for you.
 
 This will show all tasks filtered by the provided task states and turn it into a paginated view.
 
-`NeorgUtils Page <task-states>`
+`NeorgExtras Page <task-states>`
 
 You can list out all possible Neorg task states:
 
@@ -278,7 +278,7 @@ You can list out all possible Neorg task states:
 
 **Examples**
 
-`NeorgUtils Page undone pending` <- Will open agenda view with all pending
+`NeorgExtras Page undone pending` <- Will open agenda view with all pending
 and undone tasks in current workspace.
 
 Tasks are currently segregated by the nodes they are found in. You can hit
@@ -293,7 +293,7 @@ The agenda view can be closed with `q`.
 This will sort tasks according to a day view. Something similar to
 `org-agenda` but with my own flavour.
 
-`NeorgUtils Day`
+`NeorgExtras Day`
 
 ## To-Do
 
