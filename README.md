@@ -266,7 +266,7 @@ this may not be the plugin for you.
 
 ### Page View
 
-![Neorg Page View](https://i.imgur.com/Hql5Pet.png)
+![Neorg Page View]()
 
 This will show all tasks filtered by the provided task states and turn it into a paginated view.
 
