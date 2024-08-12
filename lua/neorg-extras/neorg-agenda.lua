@@ -4,7 +4,7 @@ local M = {}
 local neorg_loaded, neorg = pcall(require, "neorg.core")
 assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
 
-local utils = require("neorg-utils.utils")
+local utils = require("neorg-extras.utils")
 
 
 local function filter_tasks(input_list)
@@ -476,9 +476,9 @@ function M.day_view()
     local buf, win = utils.create_buffer(buffer_lines)
 end
 
--- Define Neovim command 'NeorgUtils' to process user input
+-- Define Neovim command 'NeorgExtras' to process user input
 vim.api.nvim_create_user_command(
-    'NeorgUtils',
+    'NeorgExtras',
     function(opts)
         local input_list = vim.split(opts.args, ' ')
         if input_list[1] == "Page" then

@@ -1,6 +1,6 @@
-local telescopic = require("neorg-utils.telescopic")
-local agenda = require("neorg-utils.neorg-agenda")
-local utils = require("neorg-utils.utils")
+local telescopic = require("neorg-extras.telescopic")
+local agenda = require("neorg-extras.neorg-agenda")
+local utils = require("neorg-extras.utils")
 
 local neorg_utils = {
     telescopic = telescopic,
