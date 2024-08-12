@@ -1,4 +1,4 @@
-local telescopic = require("neorg-utils.telescopic")
+local telescopic = require("neorg-extras.telescopic")
 
 return require("telescope").register_extension({
     exports = {
