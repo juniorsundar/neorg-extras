@@ -179,18 +179,18 @@ function M.day_view()
     local current_time = os.time()
 
     for _, task in ipairs(task_list) do
-        if task.deadline and task.deadline.year and task.deadline.month and task.deadline.day then
+        if task.deadline and tonumber(task.deadline.year) and tonumber(task.deadline.month) and tonumber(task.deadline.day) then
             local task_time = os.time({
-                year = task.deadline.year,
-                month = task.deadline.month,
-                day = task.deadline.day,
+                year = tonumber(task.deadline.year),
+                month = tonumber(task.deadline.month),
+                day = tonumber(task.deadline.day),
                 hour = 0,
                 min = 0,
                 sec = 0,
             })
 
             if task_time < current_time then
-                if task.deadline.day == day and task.deadline.month == month and task.deadline.year == year then
+                if tonumber(task.deadline.day) == day and tonumber(task.deadline.month) == month and tonumber(task.deadline.year) == year then
                     table.insert(today, task)
                 else
                     table.insert(overdue, task)
@@ -216,15 +216,17 @@ function M.day_view()
 
             local tags_str = ""
             if task.tag then
-                for _, tag in ipairs(task.tag) do
-                    tags_str = tags_str .. "`" .. tag .. "` "
+                if next(task.tag) ~= nil then
+                    for _, tag in ipairs(task.tag) do
+                        tags_str = tags_str .. " `" .. tag .. "`"
+                    end
                 end
             end
 
             local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
             local priority_str = ""
-            if task.priority ~= "" then
+            if task.priority ~= "" and task.priority ~= nil then
                 priority_str = "/" .. task.priority .. "/"
             end
 
@@ -247,9 +249,9 @@ function M.day_view()
     for _, task in ipairs(overdue) do
         if task.deadline then
             local task_time = os.time({
-                year = task.deadline.year,
-                month = task.deadline.month,
-                day = task.deadline.day
+                year = tonumber(task.deadline.year),
+                month = tonumber(task.deadline.month),
+                day = tonumber(task.deadline.day)
             })
             local overdue_years = os.date("%Y", current_time) - os.date("%Y", task_time)
             local overdue_months = os.date("%m", current_time) - os.date("%m", task_time)
@@ -284,15 +286,17 @@ function M.day_view()
 
             local tags_str = ""
             if task.tag then
-                for _, tag in ipairs(task.tag) do
-                    tags_str = tags_str .. "`" .. tag .. "` "
+                if next(task.tag) ~= nil then
+                    for _, tag in ipairs(task.tag) do
+                        tags_str = tags_str .. " `" .. tag .. "`"
+                    end
                 end
             end
 
             local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
             local priority_str = ""
-            if task.priority ~= "" then
+            if task.priority ~= "" and task.priority ~= nil then
                 priority_str = "/" .. task.priority .. "/"
             end
 
@@ -316,9 +320,9 @@ function M.day_view()
     for _, task in ipairs(this_week) do
         if task.deadline then
             local task_time = os.time({
-                year = task.deadline.year,
-                month = task.deadline.month,
-                day = task.deadline.day
+                year = tonumber(task.deadline.year),
+                month = tonumber(task.deadline.month),
+                day = tonumber(task.deadline.day)
             })
 
             -- Calculate the time remaining until the task's deadline
@@ -354,15 +358,17 @@ function M.day_view()
 
             local tags_str = ""
             if task.tag then
-                for _, tag in ipairs(task.tag) do
-                    tags_str = tags_str .. " `" .. tag .. "`"
+                if next(task.tag) ~= nil then
+                    for _, tag in ipairs(task.tag) do
+                        tags_str = tags_str .. " `" .. tag .. "`"
+                    end
                 end
             end
 
             local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
             local priority_str = ""
-            if task.priority ~= "" then
+            if task.priority ~= "" and task.priority ~= nil then
                 priority_str = "/" .. task.priority .. "/"
             end
 
@@ -385,9 +391,9 @@ function M.day_view()
     for _, task in ipairs(next_week) do
         if task.deadline then
             local task_time = os.time({
-                year = task.deadline.year,
-                month = task.deadline.month,
-                day = task.deadline.day
+                year = tonumber(task.deadline.year),
+                month = tonumber(task.deadline.month),
+                day = tonumber(task.deadline.day)
             })
 
             -- Calculate the time remaining until the task's deadline
@@ -423,15 +429,17 @@ function M.day_view()
 
             local tags_str = ""
             if task.tag then
-                for _, tag in ipairs(task.tag) do
-                    tags_str = tags_str .. " `" .. tag .. "`"
+                if next(task.tag) ~= nil then
+                    for _, tag in ipairs(task.tag) do
+                        tags_str = tags_str .. " `" .. tag .. "`"
+                    end
                 end
             end
 
             local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
             local priority_str = ""
-            if task.priority ~= "" then
+            if task.priority ~= "" and task.priority ~= nil then
                 priority_str = "/" .. task.priority .. "/"
             end
 
