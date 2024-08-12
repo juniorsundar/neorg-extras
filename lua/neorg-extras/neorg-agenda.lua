@@ -486,6 +486,13 @@ vim.api.nvim_create_user_command(
             M.page_view(input_list)
         elseif input_list[1] == "Day" then
             M.day_view()
+        elseif input_list[1] == "Metadata" then
+            local _ = table.remove(input_list, 1)
+            if input_list[1] == "update" then
+                utils.update_prop_metadata()
+            elseif input_list[1] == "delete" then
+                vim.notify("Not implemented yet", vim.log.levels.ERROR)
+            end
         else
             vim.notify("Invalid command!", vim.log.levels.ERROR)
         end
