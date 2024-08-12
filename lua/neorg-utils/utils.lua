@@ -82,6 +82,37 @@ local function read_line(file, line_number)
     return nil
 end
 
+local function encode_metadata_text(metadata_text)
+    local task_value = {}
+    if metadata_text then
+        for _, entry in ipairs(metadata_text) do
+            for line in string.gmatch(entry, "[^\r\n]+") do
+                local key, value = line:match("^%s*([^:]+):%s*(.*)")
+                if key == "started" or key == "completed" or key == "deadline" then
+                    local year, month, day, hour, minute = string.match(value,
+                        "(%d%d%d%d)%-(%d%d)%-(%d%d)|(%d%d):(%d%d)")
+                    task_value[key] = {
+                        year = year,
+                        month = month,
+                        day = day,
+                        hour = hour,
+                        minute = minute
+                    }
+                elseif key == "tag" then
+                    local tags = {}
+                    for tag in string.gmatch(value, "%s*(%w+)%s*") do
+                        table.insert(tags, tag)
+                    end
+                    task_value[key] = tags
+                else
+                    task_value[key] = value
+                end
+            end
+        end
+    end
+    return task_value
+end
+
 -- Extracts agenda data from a file, starting from a specific line
 function M.extract_property_data(filename, line_number)
     local file = io.open(filename, "r")
@@ -105,34 +136,7 @@ function M.extract_property_data(filename, line_number)
         file:close()
     end
 
-    local task_value = {}
-    if agenda_lines then
-        for _, entry in ipairs(agenda_lines) do
-            for line in string.gmatch(entry, "[^\r\n]+") do
-                local key, value = line:match("^%s*([^:]+):%s*(.*)")
-                if key == "started" or key == "completed" or key == "deadline" then
-                    local year, month, day, hour, minute = string.match(value,
-                        "(%d%d%d%d)%-(%d%d)%-(%d%d)|(%d%d):(%d%d)")
-                    task_value[key] = {
-                        year = tonumber(year),
-                        month = tonumber(month),
-                        day = tonumber(day),
-                        hour = tonumber(hour),
-                        minute = tonumber(minute)
-                    }
-                elseif key == "tag" and value ~= "" then
-                    local tags = {}
-                    for tag in string.gmatch(value, "%s*(%w+)%s*") do
-                        table.insert(tags, tag)
-                    end
-                    task_value[key] = tags
-                else
-                    task_value[key] = value
-                end
-            end
-        end
-    end
-    return task_value
+    return encode_metadata_text(agenda_lines)
 end
 
 function M.create_buffer(buffer_lines)
@@ -179,76 +183,83 @@ local function push_new_property_text(row, props)
     vim.cmd(string.format("%d,%dnormal! ==", row + 1, row + #lines))
 end
 
-local function update_old_property_text(row)
-    local full_path = vim.api.nvim_buf_get_name(0)
-    local fields = { started = false, completed = false, deadline = false, tag = false, priority = false}
-    local prop_table = M.extract_property_data(full_path, row)
-    if prop_table ~= nil then
-        for key, value in pairs(prop_table) do
-            if value == nil or value == "" then
-                fields[key] = true
-                -- print(key .. "  " .. tostring(fields[key]))
-            end
-        end
-        print(vim.inspect(fields))
+local function delete_property_metadata_block(row, bufnr)
+    local total_lines = vim.api.nvim_buf_line_count(bufnr)
 
-        for key, value in pairs(fields) do
-            if key == "started" or key == "deadline" or key == "completed" then
-                if value then
-                    vim.ui.input({prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): "}, function(input)
-                        prop_table[key] = input
-                    end)
-                else
-                    local text = prop_table[key].year .. "-" .. prop_table[key].month .. "-" .. prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
-                    -- prop_table[key] = vim.fn.input("Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", text)
-                    vim.ui.input({prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", default = text}, function(input)
-                        prop_table[key] = input
-                    end)
-                end
-            elseif key == "tag" then
-                if value then
-                    -- prop_table[key] = vim.fn.input("Enter comma-separated tags (tag1, tag2, ...): ")
-                    local tags = ""
-                    for _, tag in ipairs(prop_table["tag"]) do
-                        tags = tags ..", " .. tag
-                    end
-                    vim.ui.input({prompt = "Enter comma-separated tags (tag1, tag2, ...): ", default = tags}, function (input)
-                        prop_table[key] = input
-                    end)
-                else
-                    vim.ui.input({prompt = "Enter comma-separated tags (tag1, tag2, ...): "}, function (input)
-                        prop_table[key] = input
-                    end)
-                    -- prop_table[key] = vim.fn.input("Enter comma-separated tags (tag1, tag2, ...): ", tags)
-                end
-            else
-                if value then
-                    -- prop_table[key] = vim.fn.input("Enter priority (A/B/C/...): ")
-                    vim.ui.input({prompt = "Enter priority (A/B/C/...): "}, function (input)
-                        prop_table[key] = input
-                    end)
-                else
-                    vim.ui.input({prompt = "Enter priority (A/B/C/...): ", default = prop_table[key]}, function (input)
-                        prop_table[key] = input
-                    end)
-                    -- prop_table[key] = vim.fn.input("Enter priority (A/B/C/...): ", prop_table[key])
-                end
-            end
+    for i = row, total_lines do
+        local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+        if line:match("@end") then
+            vim.api.nvim_buf_set_lines(bufnr, row, i, false, {})
+            break
         end
     end
 end
 
-function M.inject_prop_metadata(heading_line)
-    -- return [[
-    --     @data property
-    --     id:
-    --     started:
-    --     completed:
-    --     deadline:
-    --     tag:
-    --     priority:
-    --     @end
-    --     ]]
+local function update_old_property_metadata(prop_table)
+    local fields = { started = false, completed = false, deadline = false, tag = false, priority = false }
+    if prop_table ~= nil then
+        for key, value in pairs(prop_table) do
+            if value == nil or value == "" or next(value) == nil then
+                fields[key] = true
+            end
+        end
+
+        local prop_string = {}
+        for key, value in pairs(fields) do
+            if key == "started" or key == "deadline" or key == "completed" then
+                if value then
+                    vim.ui.input({ prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): " }, function(input)
+                        -- table.insert(prop_string, key .. ": " .. input)
+                        prop_string[key] = input
+                    end)
+                else
+                    local text = prop_table[key].year ..
+                        "-" ..
+                        prop_table[key].month ..
+                        "-" .. prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
+                    vim.ui.input({ prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", default = text },
+                        function(input)
+                            -- table.insert(prop_string, key .. ": " .. input)
+                            prop_string[key] = input
+                        end)
+                end
+            elseif key == "tag" then
+                if value then
+                    local tags = ""
+                    for _, tag in ipairs(prop_table["tag"]) do
+                        tags = tags .. ", " .. tag
+                    end
+                    vim.ui.input({ prompt = "Enter comma-separated tags (tag1, tag2, ...): ", default = tags },
+                        function(input)
+                            -- table.insert(prop_string, key .. ": " .. input)
+                            prop_string[key] = input
+                        end)
+                else
+                    vim.ui.input({ prompt = "Enter comma-separated tags (tag1, tag2, ...): " }, function(input)
+                        -- table.insert(prop_string, key .. ": " .. input)
+                        prop_string[key] = input
+                    end)
+                end
+            else
+                if value then
+                    vim.ui.input({ prompt = "Enter priority (A/B/C/...): " }, function(input)
+                        -- table.insert(prop_string, key .. ": " .. input)
+                        prop_string[key] = input
+                    end)
+                else
+                    vim.ui.input({ prompt = "Enter priority (A/B/C/...): ", default = prop_table[key] }, function(input)
+                        -- table.insert(prop_string, key .. ": " .. input)
+                        prop_string[key] = input
+                    end)
+                end
+            end
+        end
+        return prop_string
+    end
+    return {}
+end
+
+local function generate_new_prop_metadata()
     local prop_table = {}
     local started = vim.fn.input("Enter started date-time (YYYY-MM-DD|HH:MM): ")
     local deadline = vim.fn.input("Enter deadline date-time (YYYY-MM-DD|HH:MM): ")
@@ -272,13 +283,13 @@ function M.inject_prop_metadata(heading_line)
         prop_table["priority"] = priority
     end
 
-    push_new_property_text(heading_line, prop_table)
+    return prop_table
 end
 
 function M.update_prop_metadata()
     local bufnr = vim.api.nvim_get_current_buf()
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
-
+    local full_path = vim.api.nvim_buf_get_name(0)
     -- Create a new floating window with the same buffer
     local opts = {
         relative = "cursor",
@@ -298,9 +309,13 @@ function M.update_prop_metadata()
     vim.api.nvim_win_close(win, true)
     vim.api.nvim_win_set_cursor(0, cursor_pos)
     if value then
-        update_old_property_text(heading_line)
+        local prop_table = M.extract_property_data(full_path, heading_line)
+        local prop_string = update_old_property_metadata(prop_table)
+        delete_property_metadata_block(heading_line, bufnr)
+        push_new_property_text(heading_line, prop_string)
     else
-        M.inject_prop_metadata(heading_line)
+        local prop_table = generate_new_prop_metadata()
+        push_new_property_text(heading_line, prop_table)
     end
 end
 
