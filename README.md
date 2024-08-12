@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="https://i.imgur.com/iikItr5.png" width=300>
+
 # NeorgExtras
 
 Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
