@@ -1,111 +1,13 @@
 local M = {}
 
--- Load Neorg; assert if not loaded
-local neorg_loaded, neorg = pcall(require, "neorg.core")
-assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
-
 local meta_man = require("neorg-extras.modules.meta-man")
 local buff_man = require("neorg-extras.modules.buff-man")
+local task_man = require("neorg-extras.modules.task-man")
 
-
-local function filter_tasks(input_list)
-    local agenda_states = {
-        { "done",      "x" },
-        { "cancelled", "_" },
-        { "pending",   "-" },
-        { "hold",      "=" },
-        { "undone",    " " },
-        { "important", "!" },
-        { "recurring", "+" },
-        { "ambiguous", "?" }
-    }
-
-    local state_icons = {
-        ["x"] = "󰄬",
-        ["_"] = "",
-        ["-"] = "󰥔",
-        ["="] = "",
-        [" "] = "×",
-        ["!"] = "⚠",
-        ["+"] = "↺",
-        ["?"] = "",
-    }
-
-    -- Filter out specified states from agenda_states
-    local filtered_states = {}
-    for _, state in ipairs(agenda_states) do
-        local found = false
-        for _, input in ipairs(input_list) do
-            if state[1] == input then
-                found = true
-                break
-            end
-        end
-        if not found then
-            table.insert(filtered_states, state)
-        end
-    end
-
-    -- Get current Neorg workspace directory
-    local current_workspace = neorg.modules.get_module("core.dirman").get_current_workspace()
-    local base_directory = current_workspace[2]
-
-    -- Use ripgrep to find tasks in Neorg files
-    local rg_command = [[rg '\* \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]]
-    .. base_directory
-    local rg_results = vim.fn.system(rg_command)
-
-    -- Parse ripgrep results into lines
-    local lines = {}
-    for line in rg_results:gmatch("[^\r\n]+") do
-        table.insert(lines, line)
-    end
-
-    local task_list = {}
-
-    -- Process lines to extract task information
-    for _, line in ipairs(lines) do
-        local file, lnum, text = line:match("([^:]+):(%d+):(.*)")
-        local task_state = text:match("%((.)%)")
-        local found = false
-        for _, state in ipairs(filtered_states) do
-            if state[2] == task_state then
-                found = true
-                break
-            end
-        end
-        if found then
-            goto continue
-        end
-        if file and lnum and text then
-            table.insert(task_list, {
-                state = state_icons[task_state],
-                filename = file,
-                lnum = tonumber(lnum),
-                task = text,
-            })
-        end
-        ::continue::
-    end
-
-    -- Extract additional agenda data for each task
-    for _, task_value in ipairs(task_list) do
-        local agenda_data = meta_man.extract_property_metadata(task_value.filename, task_value.lnum)
-        if not agenda_data then
-            goto continue
-        end
-        for key, value in pairs(agenda_data) do
-            task_value[key] = value
-        end
-        ::continue::
-    end
-
-    return task_list
-end
-
--- Generate agenda from Neorg files
+--- Generate agenda from Neorg files
+---@param input_list table
 function M.page_view(input_list)
-    local task_list = filter_tasks(input_list)
+    local task_list = task_man.filter_tasks(input_list)
 
     -- Create and display agenda buffer
     local buffer_lines = {}
@@ -136,6 +38,7 @@ function M.page_view(input_list)
     local _, _ = buff_man.create_buffer(buffer_lines)
 end
 
+--- Generate the Agenda Day View
 function M.day_view()
     local year = tonumber(os.date("%Y"))
     local month = tonumber(os.date("%m"))
@@ -173,7 +76,7 @@ function M.day_view()
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
 
-    local task_list = filter_tasks({ "undone", "pending", "hold", "important", "ambiguous" })
+    local task_list = task_man.filter_tasks({ "undone", "pending", "hold", "important", "ambiguous" })
 
     local today = {}
     local overdue = {}
@@ -183,6 +86,59 @@ function M.day_view()
 
     local current_time = os.time()
 
+    -- Sort function to prioritize by time to deadline and priority
+    local function sort_by_time_and_priority(a, b)
+        local time_a = os.time({
+            year = tonumber(a.deadline.year) or 2024,
+            month = tonumber(a.deadline.month) or 8,
+            day = tonumber(a.deadline.day) or 12,
+            hour = tonumber(a.deadline.hour) or 0,
+            min = tonumber(a.deadline.minute) or 0,
+            sec = 0,
+        }) - current_time
+
+        local time_b = os.time({
+            year = tonumber(b.deadline.year) or 2024,
+            month = tonumber(b.deadline.month) or 8,
+            day = tonumber(b.deadline.day) or 12,
+            hour = tonumber(b.deadline.hour) or 0,
+            min = tonumber(b.deadline.minute) or 0,
+            sec = 0,
+        }) - current_time
+
+        if time_a ~= time_b then
+            return time_a < time_b
+        end
+
+        local priority_a = a.priority or "Z"
+        local priority_b = b.priority or "Z"
+        return priority_a < priority_b
+    end
+
+    -- Sort function specifically for today's tasks by hour and minute
+    local function sort_today_tasks(a, b)
+        local a_time = os.time({
+            year = tonumber(a.deadline.year) or 2024,
+            month = tonumber(a.deadline.month) or 8,
+            day = tonumber(a.deadline.day) or 12,
+            hour = tonumber(a.deadline.hour) or 0,
+            min = tonumber(a.deadline.minute) or 0,
+            sec = 0,
+        })
+
+        local b_time = os.time({
+            year = tonumber(b.deadline.year) or 2024,
+            month = tonumber(b.deadline.month) or 8,
+            day = tonumber(b.deadline.day) or 12,
+            hour = tonumber(b.deadline.hour) or 0,
+            min = tonumber(b.deadline.minute) or 0,
+            sec = 0,
+        })
+
+        return a_time < b_time
+    end
+
+    -- Categorize and sort tasks
     for _, task in ipairs(task_list) do
         if task.deadline and tonumber(task.deadline.year) and tonumber(task.deadline.month) and tonumber(task.deadline.day) then
             local task_time = os.time({
@@ -211,6 +167,12 @@ function M.day_view()
             table.insert(miscellaneous, task)
         end
     end
+
+    -- Sort each category
+    table.sort(today, sort_today_tasks)
+    table.sort(overdue, sort_by_time_and_priority)
+    table.sort(this_week, sort_by_time_and_priority)
+    table.sort(next_week, sort_by_time_and_priority)
 
     table.insert(buffer_lines, "** Today")
     for _, task in ipairs(today) do
@@ -249,224 +211,105 @@ function M.day_view()
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
 
-    -- Overdue
-    table.insert(buffer_lines, "** Overdue")
-    for _, task in ipairs(overdue) do
-        if task.deadline then
-            local task_time = os.time({
-                year = tonumber(task.deadline.year) or 2024,
-                month = tonumber(task.deadline.month) or 8,
-                day = tonumber(task.deadline.day) or 12,
-            })
-            local overdue_years = os.date("%Y", current_time) - os.date("%Y", task_time)
-            local overdue_months = os.date("%m", current_time) - os.date("%m", task_time)
-            local overdue_days = os.date("%d", current_time) - os.date("%d", task_time)
+    --- Due to repetition of overdue, this_week and next_week lines,
+    --- we create a function that can repeatedly generate the buffer lines.
+    --- @param task table
+    --- @param curr_time integer
+    --- @return table
+    local function format_task_line(task, curr_time)
+        local task_time = os.time({
+            year = tonumber(task.deadline.year) or 2024,
+            month = tonumber(task.deadline.month) or 8,
+            day = tonumber(task.deadline.day) or 12,
+        })
 
-            if overdue_days < 0 then
-                overdue_months = overdue_months - 1
-                overdue_days = overdue_days +
-                os.date("%d", os.time({
-                    year = os.date("%Y", task_time),
-                    month = os.date("%m", task_time) + 1,
-                    day = 0
-                }))
-            end
-
-            if overdue_months < 0 then
-                overdue_years = overdue_years - 1
-                overdue_months = overdue_months + 12
-            end
-
-            local overdue_str = "*"
-            overdue_str = overdue_str .. "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}["
-            if overdue_years > 0 then
-                overdue_str = overdue_str .. overdue_years .. "y"
-            end
-            if overdue_months > 0 then
-                overdue_str = overdue_str .. overdue_months .. "m"
-            end
-            if overdue_days > 0 then
-                overdue_str = overdue_str .. overdue_days .. "d]*"
-            end
-
-            local tags_str = ""
-            if task.tag then
-                if next(task.tag) ~= nil then
-                    for _, tag in ipairs(task.tag) do
-                        tags_str = tags_str .. " `" .. tag .. "`"
-                    end
-                end
-            end
-
-            local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
-
-            local priority_str = ""
-            if task.priority ~= "" and task.priority ~= nil then
-                priority_str = "/" .. task.priority .. "/"
-            end
-
-            local line_str = "   " .. overdue_str
-            if priority_str ~= "" then
-                line_str = line_str .. " :: " .. priority_str
-            end
-            line_str = line_str .. " :: " .. task_str
-            if tags_str ~= "" then
-                line_str = line_str .. " :: " .. tags_str
-            end
-            table.insert(buffer_lines, line_str)
+        local years_diff = os.date("%Y", task_time) - os.date("%Y", curr_time)
+        local months_diff = os.date("%m", task_time) - os.date("%m", curr_time)
+        local days_diff = os.date("%d", task_time) - os.date("%d", curr_time)
+        if task_time < curr_time then
+            years_diff = os.date("%Y", curr_time) - os.date("%Y", task_time)
+            months_diff = os.date("%m", curr_time) - os.date("%m", task_time)
+            days_diff = os.date("%d", curr_time) - os.date("%d", task_time)
         end
+
+        if days_diff < 0 then
+            months_diff = months_diff - 1
+            days_diff = days_diff + os.date("%d", os.time({
+                year = os.date("%Y", task_time),
+                month = os.date("%m", task_time) + 1,
+                day = 0
+            }))
+        end
+
+        if months_diff < 0 then
+            years_diff = years_diff - 1
+            months_diff = months_diff + 12
+        end
+
+        local time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}["
+
+        if years_diff > 0 then
+            time_str = time_str .. years_diff .. "y"
+        end
+        if months_diff > 0 then
+            time_str = time_str .. months_diff .. "m"
+        end
+        if days_diff > 0 then
+            time_str = time_str .. days_diff .. "d]*"
+        end
+
+        local tags_str = ""
+        if task.tag and next(task.tag) ~= nil then
+            for _, tag in ipairs(task.tag) do
+                tags_str = tags_str .. " `" .. tag .. "`"
+            end
+        end
+
+        local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
+
+        local priority_str = ""
+        if task.priority and task.priority ~= "" then
+            priority_str = "/" .. task.priority .. "/"
+        end
+
+        local line_str = "   " .. time_str
+        if priority_str ~= "" then
+            line_str = line_str .. " :: " .. priority_str
+        end
+        line_str = line_str .. " :: " .. task_state_str
+        if tags_str ~= "" then
+            line_str = line_str .. " :: " .. tags_str
+        end
+
+        return line_str
     end
 
-    table.insert(buffer_lines, "")
-    table.insert(buffer_lines, "")
-
-    -- This week
-    table.insert(buffer_lines, "** This Week")
-    for _, task in ipairs(this_week) do
-        if task.deadline then
-            local task_time = os.time({
-                year = tonumber(task.deadline.year) or 2024,
-                month = tonumber(task.deadline.month) or 8,
-                day = tonumber(task.deadline.day) or 12,
-            })
-
-            -- Calculate the time remaining until the task's deadline
-            local due_years = os.date("%Y", task_time) - os.date("%Y", current_time)
-            local due_months = os.date("%m", task_time) - os.date("%m", current_time)
-            local due_days = os.date("%d", task_time) - os.date("%d", current_time)
-
-            if due_days < 0 then
-                due_months = due_months - 1
-                due_days = due_days + os.date("%d", os.time({
-                    year = os.date("%Y", task_time),
-                    month = os.date("%m", task_time) + 1,
-                    day = 0
-                }))
+    --- Adds the header and trailing line breaks to encapsulate the task lines
+    ---
+    --- @param buf_lines table
+    --- @param header string
+    --- @param tasks table
+    --- @param curr_time integer
+    local function insert_task_lines(buf_lines, header, tasks, curr_time)
+        table.insert(buf_lines, "** " .. header)
+        for _, task in ipairs(tasks) do
+            if task.deadline then
+                table.insert(buf_lines, format_task_line(task, curr_time))
             end
-
-            if due_months < 0 then
-                due_years = due_years - 1
-                due_months = due_months + 12
-            end
-
-            local due_str = "*"
-            due_str = due_str .. "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}["
-            if due_years > 0 then
-                due_str = due_str .. due_years .. "y"
-            end
-            if due_months > 0 then
-                due_str = due_str .. due_months .. "m"
-            end
-            if due_days > 0 then
-                due_str = due_str .. due_days .. "d]*"
-            end
-
-            local tags_str = ""
-            if task.tag then
-                if next(task.tag) ~= nil then
-                    for _, tag in ipairs(task.tag) do
-                        tags_str = tags_str .. " `" .. tag .. "`"
-                    end
-                end
-            end
-
-            local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
-
-            local priority_str = ""
-            if task.priority ~= "" and task.priority ~= nil then
-                priority_str = "/" .. task.priority .. "/"
-            end
-
-            local line_str = "   " .. due_str
-            if priority_str ~= "" then
-                line_str = line_str .. " :: " .. priority_str
-            end
-            line_str = line_str .. " :: " .. task_state_str
-            if tags_str ~= "" then
-                line_str = line_str .. " :: " .. tags_str
-            end
-            table.insert(buffer_lines, line_str)
         end
+        table.insert(buf_lines, "")
+        table.insert(buf_lines, "")
     end
-    table.insert(buffer_lines, "")
-    table.insert(buffer_lines, "")
 
-    -- Next week
-    table.insert(buffer_lines, "** Next Week")
-    for _, task in ipairs(next_week) do
-        if task.deadline then
-            local task_time = os.time({
-                year = tonumber(task.deadline.year) or 2024,
-                month = tonumber(task.deadline.month) or 8,
-                day = tonumber(task.deadline.day) or 12,
-            })
-
-            -- Calculate the time remaining until the task's deadline
-            local due_years = os.date("%Y", task_time) - os.date("%Y", current_time)
-            local due_months = os.date("%m", task_time) - os.date("%m", current_time)
-            local due_days = os.date("%d", task_time) - os.date("%d", current_time)
-
-            if due_days < 0 then
-                due_months = due_months - 1
-                due_days = due_days + os.date("%d", os.time({
-                    year = os.date("%Y", task_time),
-                    month = os.date("%m", task_time) + 1,
-                    day = 0
-                }))
-            end
-
-            if due_months < 0 then
-                due_years = due_years - 1
-                due_months = due_months + 12
-            end
-
-            local due_str = "*"
-            due_str = due_str .. "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}["
-            if due_years > 0 then
-                due_str = due_str .. due_years .. "y"
-            end
-            if due_months > 0 then
-                due_str = due_str .. due_months .. "m"
-            end
-            if due_days > 0 then
-                due_str = due_str .. due_days .. "d]*"
-            end
-
-            local tags_str = ""
-            if task.tag then
-                if next(task.tag) ~= nil then
-                    for _, tag in ipairs(task.tag) do
-                        tags_str = tags_str .. " `" .. tag .. "`"
-                    end
-                end
-            end
-
-            local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
-
-            local priority_str = ""
-            if task.priority ~= "" and task.priority ~= nil then
-                priority_str = "/" .. task.priority .. "/"
-            end
-
-            local line_str = "   " .. due_str
-            if priority_str ~= "" then
-                line_str = line_str .. " :: " .. priority_str
-            end
-            line_str = line_str .. " :: " .. task_state_str
-            if tags_str ~= "" then
-                line_str = line_str .. " :: " .. tags_str
-            end
-            table.insert(buffer_lines, line_str)
-        end
-    end
-    table.insert(buffer_lines, "")
-    table.insert(buffer_lines, "")
+    insert_task_lines(buffer_lines, "Overdue", overdue, current_time)
+    insert_task_lines(buffer_lines, "This Week", this_week, current_time)
+    insert_task_lines(buffer_lines, "Next Week", next_week, current_time)
 
     table.insert(buffer_lines, "** Miscellaneous")
     for _, task in ipairs(miscellaneous) do
         local unscheduled_str = "*"
         unscheduled_str = unscheduled_str ..
-        "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+            "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
 
         local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
         local tags_str = "`untagged`"

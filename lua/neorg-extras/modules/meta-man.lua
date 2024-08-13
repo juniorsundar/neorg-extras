@@ -170,9 +170,21 @@ function M.fetch_updated_property_metadata(prop_table)
     local fields = { started = false, completed = false, deadline = false, tag = false, priority = false }
     if prop_table ~= nil then
         for key, value in pairs(prop_table) do
-            if value == nil or value == "" or next(value) == nil then
+            -- Mark field as true if value is nil
+            if value == nil then
+                fields[key] = true
+                goto continue
+            end
+            -- Mark field as true if value is an empty table
+            if type(value) == "table" and next(value) == nil then
+                fields[key] = true
+                goto continue
+            end
+            -- Mark field as true if value is an empty string
+            if value == "" then
                 fields[key] = true
             end
+            ::continue::
         end
 
         local prop_string = {}
@@ -186,9 +198,9 @@ function M.fetch_updated_property_metadata(prop_table)
                     end)
                 else
                     local text = prop_table[key].year ..
-                        "-" ..
-                        prop_table[key].month ..
-                        "-" .. prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
+                    "-" ..
+                    prop_table[key].month ..
+                    "-" .. prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
                     vim.ui.input({ prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", default = text },
                         function(input)
                             if input ~= "" then
