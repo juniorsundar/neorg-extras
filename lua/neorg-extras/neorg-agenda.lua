@@ -4,7 +4,8 @@ local M = {}
 local neorg_loaded, neorg = pcall(require, "neorg.core")
 assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
 
-local utils = require("neorg-extras.utils")
+local meta_man = require("neorg-extras.modules.meta-man")
+local buff_man = require("neorg-extras.modules.buff-man")
 
 
 local function filter_tasks(input_list)
@@ -89,10 +90,14 @@ local function filter_tasks(input_list)
 
     -- Extract additional agenda data for each task
     for _, task_value in ipairs(task_list) do
-        local agenda_data = utils.extract_property_data(task_value.filename, task_value.lnum)
+        local agenda_data = meta_man.extract_property_metadata(task_value.filename, task_value.lnum)
+        if not agenda_data then
+            goto continue
+        end
         for key, value in pairs(agenda_data) do
             task_value[key] = value
         end
+        ::continue::
     end
 
     return task_list
@@ -112,7 +117,7 @@ function M.page_view(input_list)
             if current_file then
                 table.insert(buffer_lines, "")
             end
-            local file_metadata = utils.extract_file_metadata(entry.filename)
+            local file_metadata = meta_man.extract_file_metadata(entry.filename)
             table.insert(buffer_lines, "___")
             table.insert(buffer_lines, "")
             if file_metadata then
@@ -128,7 +133,7 @@ function M.page_view(input_list)
     table.insert(buffer_lines, "___")
 
     -- Write formatted lines to the buffer
-    local buf, win = utils.create_buffer(buffer_lines)
+    local _, _ = buff_man.create_buffer(buffer_lines)
 end
 
 function M.day_view()
@@ -181,9 +186,9 @@ function M.day_view()
     for _, task in ipairs(task_list) do
         if task.deadline and tonumber(task.deadline.year) and tonumber(task.deadline.month) and tonumber(task.deadline.day) then
             local task_time = os.time({
-                year = tonumber(task.deadline.year),
-                month = tonumber(task.deadline.month),
-                day = tonumber(task.deadline.day),
+                year = tonumber(task.deadline.year) or 2024,
+                month = tonumber(task.deadline.month) or 8,
+                day = tonumber(task.deadline.day) or 12,
                 hour = 0,
                 min = 0,
                 sec = 0,
@@ -249,9 +254,9 @@ function M.day_view()
     for _, task in ipairs(overdue) do
         if task.deadline then
             local task_time = os.time({
-                year = tonumber(task.deadline.year),
-                month = tonumber(task.deadline.month),
-                day = tonumber(task.deadline.day)
+                year = tonumber(task.deadline.year) or 2024,
+                month = tonumber(task.deadline.month) or 8,
+                day = tonumber(task.deadline.day) or 12,
             })
             local overdue_years = os.date("%Y", current_time) - os.date("%Y", task_time)
             local overdue_months = os.date("%m", current_time) - os.date("%m", task_time)
@@ -320,9 +325,9 @@ function M.day_view()
     for _, task in ipairs(this_week) do
         if task.deadline then
             local task_time = os.time({
-                year = tonumber(task.deadline.year),
-                month = tonumber(task.deadline.month),
-                day = tonumber(task.deadline.day)
+                year = tonumber(task.deadline.year) or 2024,
+                month = tonumber(task.deadline.month) or 8,
+                day = tonumber(task.deadline.day) or 12,
             })
 
             -- Calculate the time remaining until the task's deadline
@@ -391,9 +396,9 @@ function M.day_view()
     for _, task in ipairs(next_week) do
         if task.deadline then
             local task_time = os.time({
-                year = tonumber(task.deadline.year),
-                month = tonumber(task.deadline.month),
-                day = tonumber(task.deadline.day)
+                year = tonumber(task.deadline.year) or 2024,
+                month = tonumber(task.deadline.month) or 8,
+                day = tonumber(task.deadline.day) or 12,
             })
 
             -- Calculate the time remaining until the task's deadline
@@ -473,7 +478,7 @@ function M.day_view()
         table.insert(buffer_lines, line_str)
     end
 
-    local buf, win = utils.create_buffer(buffer_lines)
+    local _, _ = buff_man.create_buffer(buffer_lines)
 end
 
 -- Define Neovim command 'NeorgExtras' to process user input
@@ -489,7 +494,7 @@ vim.api.nvim_create_user_command(
         elseif input_list[1] == "Metadata" then
             local _ = table.remove(input_list, 1)
             if input_list[1] == "update" then
-                utils.update_prop_metadata()
+                meta_man.update_property_metadata()
             elseif input_list[1] == "delete" then
                 vim.notify("Not implemented yet", vim.log.levels.ERROR)
             end

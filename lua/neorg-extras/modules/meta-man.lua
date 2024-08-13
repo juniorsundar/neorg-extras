@@ -1,6 +1,6 @@
 local M = {}
 
-local function is_prop_metadata(bufnr)
+function M.is_present_property_metadata(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
     local parser = vim.treesitter.get_parser(bufnr, 'norg')
     local tree = parser:parse()[1]
@@ -82,7 +82,7 @@ local function read_line(file, line_number)
     return nil
 end
 
-local function encode_metadata_text(metadata_text)
+function M.encode_metadata_text(metadata_text)
     local task_value = {}
     if metadata_text then
         for _, entry in ipairs(metadata_text) do
@@ -114,7 +114,7 @@ local function encode_metadata_text(metadata_text)
 end
 
 -- Extracts agenda data from a file, starting from a specific line
-function M.extract_property_data(filename, line_number)
+function M.extract_property_metadata(filename, line_number)
     local file = io.open(filename, "r")
     if not file then
         vim.notify("Error opening file: " .. filename, vim.log.levels.ERROR)
@@ -135,52 +135,10 @@ function M.extract_property_data(filename, line_number)
     else
         file:close()
     end
-    return encode_metadata_text(agenda_lines)
+    return M.encode_metadata_text(agenda_lines)
 end
 
-function M.create_buffer(buffer_lines)
-    -- Create a new buffer for displaying the agenda
-    local buf = vim.api.nvim_create_buf(false, true)
-
-    vim.cmd("tabnew")
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_lines)
-
-    -- Set buffer options for display and interaction
-    vim.api.nvim_set_option_value("filetype", "norg", { buf = buf })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-    vim.api.nvim_set_option_value("readonly", true, { buf = buf })
-    vim.api.nvim_set_option_value("wrap", false, { win = win })
-    vim.api.nvim_set_option_value("conceallevel", 2, { win = win })
-    vim.api.nvim_set_option_value("foldlevel", 999, { win = win })
-    vim.api.nvim_set_option_value("number", false, { win = win })
-    vim.api.nvim_set_option_value("relativenumber", false, { win = win })
-
-    -- Function to handle buffer leave event
-    local function on_buf_leave()
-        local file = vim.api.nvim_buf_get_name(0)
-        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
-
-        vim.cmd("tabclose")
-
-        -- Reopen the file in the previous tab
-        vim.cmd("tabprevious")
-        vim.cmd("edit " .. file)
-        vim.api.nvim_win_set_cursor(0, {row, 0})
-    end
-
-    -- Setup an autocommand to observe buffer changes and trigger the function
-    vim.api.nvim_create_autocmd("BufLeave", {
-        buffer = buf,
-        callback = on_buf_leave,
-        once = true,
-    })
-
-    return buf, win
-end
-
-local function push_new_property_text(row, props)
+function M.push_new_property_metadata_string(row, props)
     local bufnr = vim.api.nvim_get_current_buf()
     local text = {}
 
@@ -196,7 +154,7 @@ local function push_new_property_text(row, props)
     vim.cmd(string.format("%d,%dnormal! ==", row + 1, row + #lines))
 end
 
-local function delete_property_metadata_block(row, bufnr)
+function M.delete_property_metadata(row, bufnr)
     local total_lines = vim.api.nvim_buf_line_count(bufnr)
 
     for i = row, total_lines do
@@ -208,7 +166,7 @@ local function delete_property_metadata_block(row, bufnr)
     end
 end
 
-local function update_old_property_metadata(prop_table)
+function M.fetch_updated_property_metadata(prop_table)
     local fields = { started = false, completed = false, deadline = false, tag = false, priority = false }
     if prop_table ~= nil then
         for key, value in pairs(prop_table) do
@@ -275,7 +233,7 @@ local function update_old_property_metadata(prop_table)
     return {}
 end
 
-local function generate_new_prop_metadata()
+function M.generate_property_metadata()
     local prop_table = {}
     local started = vim.fn.input("Enter started date-time (YYYY-MM-DD|HH:MM): ")
     local deadline = vim.fn.input("Enter deadline date-time (YYYY-MM-DD|HH:MM): ")
@@ -302,7 +260,7 @@ local function generate_new_prop_metadata()
     return prop_table
 end
 
-function M.update_prop_metadata()
+function M.update_property_metadata()
     local bufnr = vim.api.nvim_get_current_buf()
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
     local full_path = vim.api.nvim_buf_get_name(0)
@@ -320,18 +278,18 @@ function M.update_prop_metadata()
     vim.api.nvim_win_set_cursor(win, { cursor_pos[1] + 1, 0 })
 
     -- Check if there is property metadata
-    local value, property_line, heading_line = is_prop_metadata(bufnr)
+    local value, property_line, heading_line = M.is_present_property_metadata(bufnr)
 
     vim.api.nvim_win_close(win, true)
     vim.api.nvim_win_set_cursor(0, cursor_pos)
     if value then
-        local prop_table = M.extract_property_data(full_path, heading_line)
-        local prop_string = update_old_property_metadata(prop_table)
-        delete_property_metadata_block(heading_line, bufnr)
-        push_new_property_text(heading_line, prop_string)
+        local prop_table = M.extract_property_metadata(full_path, heading_line)
+        local prop_string = M.fetch_updated_property_metadata(prop_table)
+        M.delete_property_metadata(heading_line, bufnr)
+        M.push_new_property_metadata_string(heading_line, prop_string)
     else
-        local prop_table = generate_new_prop_metadata()
-        push_new_property_text(heading_line, prop_table)
+        local prop_table = M.generate_property_metadata()
+        M.push_new_property_metadata_string(heading_line, prop_table)
     end
 end
 
@@ -356,15 +314,6 @@ function M.extract_file_metadata(norg_address)
         return nil
     end
 
-    return M.decode_metadata(metadata_block)
-end
-
--- Function to decode the metadata block into a table.
--- This function parses the metadata block line by line, converting key-value pairs
--- into a Lua table. It also handles special cases, such as parsing categories
--- enclosed in square brackets.
-function M.decode_metadata(metadata_block)
-    -- Initialize the metadata table
     local metadata = {}
     local in_categories = false
     local categories = {}
