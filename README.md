@@ -330,9 +330,9 @@ priority: A/B/C ...
 @end
 ```
 
-Fair warning, this verbose property tag will not conceal, so you are going to
+~~Fair warning, this verbose property tag will not conceal, so you are going to
 have this chunk in your view. You should decide if you can live with that.
-Because if you can, only then can you access the Day View (TM).
+Because if you can, only then can you access the Day View (TM).~~
 
 Of course, this plug(plugin)in(?) makes your life a lot easier by exposing the
 following function:
