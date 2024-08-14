@@ -4,7 +4,12 @@ local M = {}
 local neorg_loaded, neorg = pcall(require, "neorg.core")
 assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
 
+M.buf = nil
+M.win = nil
 
+--- Navigates to a specific task in a Neorg file and opens it at the correct line.
+--- Parses the current Neorg link under the cursor, finds the corresponding task
+--- in the target file using `ripgrep`, and opens the file at the task's line.
 function M.open_to_target_task()
     -- Wrapping around the esupports.hop module to get the link
     local parsed_link = neorg.modules.get_module("core.esupports.hop").parse_link(
@@ -21,8 +26,9 @@ function M.open_to_target_task()
         "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
     local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
 
-    vim.cmd("tabclose")
+    -- vim.cmd("quit")
     vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
+    vim.api.nvim_buf_delete(M.buf, { force = true })
 end
 
 --- Standard buffer to display agendas
@@ -30,38 +36,39 @@ end
 ---@return integer buffer_number
 ---@return integer window_number
 function M.create_buffer(buffer_lines)
-    local buf = vim.api.nvim_create_buf(false, true)
+    M.buf = vim.api.nvim_create_buf(true, true)
 
-    vim.cmd("tabnew")
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_lines)
+    M.win = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_buf(M.win, M.buf)
+    vim.api.nvim_buf_set_lines(M.buf, 0, -1, false, buffer_lines)
 
     -- Set buffer options for display and interaction
-    vim.api.nvim_set_option_value("filetype", "norg", { buf = buf })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
-    vim.api.nvim_set_option_value("readonly", true, { buf = buf })
-    vim.api.nvim_set_option_value("wrap", false, { win = win })
-    vim.api.nvim_set_option_value("conceallevel", 2, { win = win })
-    vim.api.nvim_set_option_value("foldlevel", 999, { win = win })
-    vim.api.nvim_set_option_value("number", false, { win = win })
-    vim.api.nvim_set_option_value("relativenumber", false, { win = win })
+    vim.api.nvim_set_option_value("filetype", "norg", { buf = M.buf })
+    vim.api.nvim_set_option_value("modifiable", false, { buf = M.buf })
+    vim.api.nvim_set_option_value('swapfile', false, { buf = M.buf })
+    vim.api.nvim_set_option_value('buftype', 'nofile', { buf = M.buf })
+    vim.api.nvim_set_option_value('bufhidden', 'delete', { buf = M.buf })
+    vim.api.nvim_set_option_value("readonly", true, { buf = M.buf })
+    vim.api.nvim_set_option_value("wrap", false, { win = M.win })
+    vim.api.nvim_set_option_value("conceallevel", 2, { win = M.win })
+    vim.api.nvim_set_option_value("foldlevel", 999, { win = M.win })
+    vim.api.nvim_set_option_value("number", false, { win = M.win })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = M.win })
 
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', '', {
+    vim.api.nvim_buf_set_keymap(M.buf, 'n', '<cr>', '', {
         noremap = true,
         silent = true,
         callback = M.open_to_target_task
     })
-    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', '', {
+    vim.api.nvim_buf_set_keymap(M.buf, 'n', 'q', '', {
         noremap = true,
         silent = true,
         callback = function()
-            vim.cmd("tabclose")
-            vim.api.nvim_buf_delete(buf, { force = true })
+            vim.api.nvim_buf_delete(M.buf, { force = true })
         end
     })
 
-    return buf, win
+    return M.buf, M.win
 end
 
 return M
