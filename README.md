@@ -74,7 +74,11 @@ This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installat
 return {
     "nvim-neorg/neorg",
     dependencies = {
-        { "juniorsundar/neorg_extras", opts = {} }, -- opts will have some use later
+        { "juniorsundar/neorg_extras",
+            opts = {
+                treesitter_fold = true, -- Default is already true
+            } 
+        },
         "nvim-telescope/telescope.nvim", -- Required for the Neorg-Roam features
         "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
     },
