@@ -1,7 +1,35 @@
 local M = {}
 
+-- Ensure Neorg is loaded
+local neorg_loaded, neorg = pcall(require, "neorg.core")
+assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first")
+
+
+function M.open_to_target_task()
+    -- Wrapping around the esupports.hop module to get the link
+    local parsed_link = neorg.modules.get_module("core.esupports.hop").parse_link(
+        neorg.modules.get_module("core.esupports.hop").extract_link_node(),
+        vim.api.nvim_get_current_buf()
+    )
+    if not parsed_link then
+        return
+    end
+
+    -- Since its always going to be a task, we can rg with ') <task>' and filename
+    -- to get file row
+    local search = "rg -n -o --no-filename --fixed-strings " ..
+        "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
+    local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
+
+    vim.cmd("tabclose")
+    vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
+end
+
+--- Standard buffer to display agendas
+---@param buffer_lines string[]
+---@return integer buffer_number
+---@return integer window_number
 function M.create_buffer(buffer_lines)
-    -- Create a new buffer for displaying the agenda
     local buf = vim.api.nvim_create_buf(false, true)
 
     vim.cmd("tabnew")
@@ -19,24 +47,18 @@ function M.create_buffer(buffer_lines)
     vim.api.nvim_set_option_value("number", false, { win = win })
     vim.api.nvim_set_option_value("relativenumber", false, { win = win })
 
-    -- Function to handle buffer leave event
-    local function on_buf_leave()
-        local file = vim.api.nvim_buf_get_name(0)
-        local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
-
-        vim.cmd("tabclose")
-
-        -- Reopen the file in the previous tab
-        vim.cmd("tabprevious")
-        vim.cmd("edit " .. file)
-        vim.api.nvim_win_set_cursor(0, {row, 0})
-    end
-
-    -- Setup an autocommand to observe buffer changes and trigger the function
-    vim.api.nvim_create_autocmd("BufLeave", {
-        buffer = buf,
-        callback = on_buf_leave,
-        once = true,
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', '', {
+        noremap = true,
+        silent = true,
+        callback = M.open_to_target_task
+    })
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', '', {
+        noremap = true,
+        silent = true,
+        callback = function()
+            vim.cmd("tabclose")
+            vim.api.nvim_buf_delete(buf, { force = true })
+        end
     })
 
     return buf, win
