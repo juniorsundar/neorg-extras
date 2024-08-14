@@ -22,12 +22,15 @@ function M.open_to_target_task()
 
     -- Since its always going to be a task, we can rg with ') <task>' and filename
     -- to get file row
-    local search = "rg -n -o --no-filename --fixed-strings " ..
-        "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
-    local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
+    if parsed_link.link_location_text then
+        local search = "rg -n -o --no-filename --fixed-strings " ..
+            "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
+        local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
 
-    -- vim.cmd("quit")
-    vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
+        vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
+    else
+        vim.cmd("edit " .. parsed_link.link_file_text)
+    end
     vim.api.nvim_buf_delete(M.buf, { force = true })
 end
 

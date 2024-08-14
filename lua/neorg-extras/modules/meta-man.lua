@@ -1,5 +1,25 @@
 local M = {}
 
+M.setup_treesitter_folding = function()
+    -- Ensure the 'norg' parser is installed and loaded
+    local neorg_folds_file = vim.fn.stdpath("data") .. "/lazy/neorg/queries/norg/folds.scm"
+    local _ = require("nvim-treesitter.parsers").get_parser_configs().norg
+
+    local property_query = [[
+    (ranged_verbatim_tag
+      name: (tag_name) @name (#eq? @name "data")) @fold
+    ]]
+
+    local neorg_query = ""
+    if vim.fn.filereadable(neorg_folds_file) == 1 then
+        neorg_query = table.concat(vim.fn.readfile(neorg_folds_file), "\n")
+    else
+        vim.api.nvim_err_writeln("Failed to find Neorg Tree-sitter query file: " .. neorg_folds_file)
+    end
+    local combined_query = neorg_query .. "\n" .. property_query
+    vim.treesitter.query.set("norg", "folds", combined_query)
+end
+
 function M.is_present_property_metadata(bufnr)
     bufnr = bufnr or vim.api.nvim_get_current_buf()
     local parser = vim.treesitter.get_parser(bufnr, 'norg')
