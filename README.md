@@ -334,6 +334,9 @@ priority: A/B/C ...
 have this chunk in your view. You should decide if you can live with that.
 Because if you can, only then can you access the Day View (TM).~~
 
+There is tree-sitter folding for the `ranged_verbatim_tag` labelled `data`.
+So it no longer will take up your visual space.
+
 Of course, this plug(plugin)in(?) makes your life a lot easier by exposing the
 following function:
 
@@ -358,6 +361,19 @@ support for finer sorting yet).
 
 # To-Do
 
-- [ ] Deadline and time based scheduling
-- [ ] Sorting by dates, tags, etc.
-- [ ] A better UI...
+## Primary
+
+- [x] Deadline and time based scheduling
+- [-] Sorting by dates, tags, etc.
+    - [x] Sorting by date and priority (default)
+    - [-] Sorting by tags
+- [ ] Better UI for property tag population (especially dates and times)
+- [ ] Wrapper around task changer to auto-generate property metadata
+- [ ] Alternate views (open to discussion)
+- [ ] Permalinking for Neorg-Roam
+- [ ] Better UI for Backlinks (Telescope/Fuzzy finder is too distracting)
+
+## Secondary
+
+- [ ] Generating graphs for organising tasks
+- [ ] Kanban?
