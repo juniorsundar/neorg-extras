@@ -1,18 +1,17 @@
 <div align="center">
 
-<img src="https://i.imgur.com/iikItr5.png" width=300>
+    <img src="https://i.imgur.com/iikItr5.png" width=300>
 
-# NeorgExtras
+    # NeorgExtras
 
 Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
 
 </div>
 <div align="center">
-<br>
+    <br>
 </div>
 
 <!--toc:start-->
-- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -37,13 +36,14 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
     - [Function](#function)
 - [Neorg-Agenda](#neorg-agenda)
   - [Rationale](#rationale)
-  - [Agenda View](#agenda-view)
+  - [Views](#views)
     - [Page View](#page-view)
     - [Day View (TM)](#day-view-tm)
-      - [The View](#the-view)
-      - [The Property Metadata](#the-property-metadata)
+  - [The Property Metadata](#the-property-metadata)
       - [Sorting-out my Life](#sorting-out-my-life)
 - [To-Do](#to-do)
+  - [Primary](#primary)
+  - [Secondary](#secondary)
 <!--toc:end-->
 
 > [!NOTE]
@@ -251,10 +251,10 @@ can use in the meantime.
 I don't want to deviate excessively and create new grammar to accommodate my
 GTD because if, in the future, Neorg gains its own builtin GTD feature, I want
 to minimise issues of backwards compatibility. The last thing I want is to go
-through all my old files and remove artefacts that will interfere with the new
+through all my old files and remove artifacts that will interfere with the new
 and definitely superior GTD implementation.
 
-## Agenda View
+## Views
 
 A new buffer that contains all the tasks in your workspace. Note that it will
 only consider tasks that are prefixed with a heading tag:
@@ -272,7 +272,8 @@ this may not be the plugin for you.
 
 ![Neorg Page View]()
 
-This will show all tasks filtered by the provided task states and turn it into a paginated view.
+This will show all tasks filtered by the provided task states and turn it into
+a paginated view.
 
 `NeorgExtras Page <task-states>`
 
@@ -299,8 +300,6 @@ The agenda view can be closed with `q`.
 
 ### Day View (TM)
 
-#### The View
-
 ![Neorg Day View](https://i.imgur.com/oFZmfd0.png)
 
 This will sort tasks according to a day view. Something similar to
@@ -318,7 +317,7 @@ official way to do things. That is still awaiting an update of the tree-sitter
 parser. I don't know how long that will take. And as someone who wants to
 organise their life yesterday, I can't afford to wait that long. Hence:
 
-#### The Property Metadata
+## The Property Metadata
 
 ```norg
 @data property
@@ -334,7 +333,7 @@ priority: A/B/C ...
 have this chunk in your view. You should decide if you can live with that.
 Because if you can, only then can you access the Day View (TM).~~
 
-There is tree-sitter folding for the `ranged_verbatim_tag` labelled `data`.
+There is tree-sitter folding for the `ranged_verbatim_tag` labeled `data`.
 So it no longer will take up your visual space.
 
 Of course, this plug(plugin)in(?) makes your life a lot easier by exposing the
@@ -348,9 +347,9 @@ This function doesn't discriminate between task headings or regular headings
 This function is multi-purpose:
 
 1. It can add the property tag to the current heading if it doesn't have one
-   already.
+already.
 2. It will update the property tag under the current heading if it has one
-   already
+already
 
 #### Sorting-out my Life
 
