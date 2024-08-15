@@ -40,7 +40,7 @@ function M.blacklist_states(input_list)
 end
 
 function M.find_tasks_in_workspace(base_directory)
-    local rg_command = [[rg '\* \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]] .. base_directory
+    local rg_command = [[rg '^\*{1,8} \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]] .. base_directory
     return vim.fn.systemlist(rg_command)
 end
 
