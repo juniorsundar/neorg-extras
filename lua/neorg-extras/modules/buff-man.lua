@@ -9,7 +9,6 @@ M.win = nil
 M.default_winopts = {
     { "wrap",           nil },
     { "conceallevel",   nil },
-    { "foldlevel",      nil },
     { "number",         nil },
     { "relativenumber", nil },
 }
@@ -70,7 +69,6 @@ function M.create_view_buffer(buffer_lines)
     vim.api.nvim_set_option_value("readonly", true, { buf = M.buf })
     vim.api.nvim_set_option_value("wrap", false, { win = M.win })
     vim.api.nvim_set_option_value("conceallevel", 2, { win = M.win })
-    vim.api.nvim_set_option_value("foldlevel", 999, { win = M.win })
     vim.api.nvim_set_option_value("number", false, { win = M.win })
     vim.api.nvim_set_option_value("relativenumber", false, { win = M.win })
 

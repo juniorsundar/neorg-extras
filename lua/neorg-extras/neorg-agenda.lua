@@ -70,8 +70,8 @@ function M.day_view()
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "___")
     table.insert(buffer_lines, "* Today's Schedule")
-    table.insert(buffer_lines, "  /" .. os.date("%A", os.time(timetable)) .. "/ == /" .. year ..
-        "-" .. month .. "-" .. day .. "/ == /wk" .. os.date("%U", os.time(timetable)) .. "/")
+    table.insert(buffer_lines, "  " .. os.date("%A", os.time(timetable)) .. " == " .. year ..
+        "-" .. month .. "-" .. day .. " == wk" .. os.date("%U", os.time(timetable)))
     table.insert(buffer_lines, "___")
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
@@ -192,16 +192,17 @@ function M.day_view()
 
             local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
-            local priority_str = ""
+            local priority_str = "  "
             if task.priority ~= "" and task.priority ~= nil then
-                priority_str = "/" .. task.priority .. "/"
+                priority_str = priority_str .. "*" .. task.priority .. "*"
+            else
+                priority_str = priority_str .. " "
             end
+            priority_str = priority_str .. "  "
 
             local line_str = "   " .. deadline_str
-            if priority_str ~= "" then
-                line_str = line_str .. " :: " .. priority_str
-            end
-            line_str = line_str .. " :: " .. task_str
+            line_str = line_str .. " ::" .. priority_str
+            line_str = line_str .. ":: " .. task_str
             if tags_str ~= "" then
                 line_str = line_str .. " :: " .. tags_str
             end
@@ -267,16 +268,17 @@ function M.day_view()
 
         local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
-        local priority_str = ""
-        if task.priority and task.priority ~= "" then
-            priority_str = "/" .. task.priority .. "/"
+        local priority_str = "  "
+        if task.priority ~= "" and task.priority ~= nil then
+            priority_str = priority_str .. "*" .. task.priority .. "*"
+        else
+            priority_str = priority_str .. " "
         end
+        priority_str = priority_str .. "  "
 
         local line_str = "   " .. time_str
-        if priority_str ~= "" then
-            line_str = line_str .. " :: " .. priority_str
-        end
-        line_str = line_str .. " :: " .. task_state_str
+        line_str = line_str .. " ::" .. priority_str
+        line_str = line_str .. ":: " .. task_state_str
         if tags_str ~= "" then
             line_str = line_str .. " :: " .. tags_str
         end
@@ -309,11 +311,11 @@ function M.day_view()
     for _, task in ipairs(miscellaneous) do
         local unscheduled_str = "*"
         unscheduled_str = unscheduled_str ..
-            "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+        "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
 
         local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
         local tags_str = "`untagged`"
-        local priority_str = "/unprioritised/"
+        local priority_str = "*unprioritised*"
         local line_str = "   " .. unscheduled_str
         line_str = line_str .. " :: " .. priority_str
         line_str = line_str .. " :: " .. task_str
