@@ -1,14 +1,14 @@
 <div align="center">
 
-    <img src="https://i.imgur.com/iikItr5.png" width=300>
+<img src="https://i.imgur.com/iikItr5.png" width=300>
 
-    # NeorgExtras
+# NeorgExtras
 
 Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
 
 </div>
 <div align="center">
-    <br>
+<br>
 </div>
 
 <!--toc:start-->
