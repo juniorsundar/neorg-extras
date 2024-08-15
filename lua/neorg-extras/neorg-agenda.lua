@@ -35,7 +35,7 @@ function M.page_view(input_list)
     table.insert(buffer_lines, "___")
 
     -- Write formatted lines to the buffer
-    local _, _ = buff_man.create_buffer(buffer_lines)
+    local _, _ = buff_man.create_view_buffer(buffer_lines)
 end
 
 --- Generate the Agenda Day View
@@ -246,7 +246,7 @@ function M.day_view()
             months_diff = months_diff + 12
         end
 
-        local time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}["
+        local time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "^(%*+)%s*%b()%s*", "%1 ") .. "}["
 
         if years_diff > 0 then
             time_str = time_str .. years_diff .. "y"
@@ -321,7 +321,7 @@ function M.day_view()
         table.insert(buffer_lines, line_str)
     end
 
-    local _, _ = buff_man.create_buffer(buffer_lines)
+    local _, _ = buff_man.create_view_buffer(buffer_lines)
 end
 
 -- Define Neovim command 'NeorgExtras' to process user input
