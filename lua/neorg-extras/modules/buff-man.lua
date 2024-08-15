@@ -6,6 +6,13 @@ assert(neorg_loaded, "Neorg is not loaded - please make sure to load Neorg first
 
 M.buf = nil
 M.win = nil
+M.default_winopts = {
+    { "wrap",           nil },
+    { "conceallevel",   nil },
+    { "foldlevel",      nil },
+    { "number",         nil },
+    { "relativenumber", nil },
+}
 
 --- Navigates to a specific task in a Neorg file and opens it at the correct line.
 --- Parses the current Neorg link under the cursor, finds the corresponding task
@@ -32,18 +39,27 @@ function M.open_to_target_task()
         vim.cmd("edit " .. parsed_link.link_file_text)
     end
     vim.api.nvim_buf_delete(M.buf, { force = true })
+    -- Populate the default_winopts table with current window options
+    for _, opt in ipairs(M.default_winopts) do
+        vim.api.nvim_set_option_value(opt[1], opt[2], {win = M.win})
+    end
 end
 
 --- Standard buffer to display agendas
 ---@param buffer_lines string[]
 ---@return integer buffer_number
 ---@return integer window_number
-function M.create_buffer(buffer_lines)
+function M.create_view_buffer(buffer_lines)
     M.buf = vim.api.nvim_create_buf(true, true)
 
     M.win = vim.api.nvim_get_current_win()
     vim.api.nvim_win_set_buf(M.win, M.buf)
     vim.api.nvim_buf_set_lines(M.buf, 0, -1, false, buffer_lines)
+
+    -- Populate the default_winopts table with current window options
+    for _, opt in ipairs(M.default_winopts) do
+        opt[2] = vim.api.nvim_get_option_value(opt[1], {win = M.win})
+    end
 
     -- Set buffer options for display and interaction
     vim.api.nvim_set_option_value("filetype", "norg", { buf = M.buf })
@@ -67,6 +83,10 @@ function M.create_buffer(buffer_lines)
         noremap = true,
         silent = true,
         callback = function()
+            -- Restore the original window options when closing
+            for _, opt in ipairs(M.default_winopts) do
+                vim.api.nvim_set_option_value(opt[1], opt[2], {win = M.win})
+            end
             vim.api.nvim_buf_delete(M.buf, { force = true })
         end
     })
