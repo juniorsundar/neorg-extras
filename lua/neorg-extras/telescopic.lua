@@ -114,6 +114,63 @@ function M.neorg_node_injector()
         :find()
 end
 
+---Get the heading text provided a file and heading line number
+---@param filename string
+---@param lineno number
+---@return string|nil
+local function get_heading_text(filename, lineno)
+    local file = io.open(filename, "r")
+    if not file then
+        print("Cannot open file:", filename)
+        return nil
+    end
+
+    local file_content = file:read("*all")
+    file:close()
+
+    local tree = vim.treesitter.get_string_parser(file_content, 'norg'):parse()[1]
+    local heading_query_string = [[
+    (heading1
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading1
+
+    (heading2
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading2
+
+    (heading3
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading3
+
+    (heading4
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading4
+
+    (heading5
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading5
+
+    (heading6
+      title: (paragraph_segment) @paragraph_segment
+    ) @heading6
+    ]]
+
+    local heading_query = vim.treesitter.query.parse('norg', heading_query_string)
+    local target_line = lineno - 1
+    for _, node, _, _ in heading_query:iter_captures(tree:root(), file_content, 0, -1) do
+        local row1, _, row2, _ = node:range()
+        if row1 < lineno and row2 >= target_line then
+            for child in node:iter_children() do
+                local crow1, _, crow2, _ = child:range()
+                if child:type() == "paragraph_segment" and (crow1 < lineno and crow2 >= target_line) then
+                    return(vim.treesitter.get_node_text(child, file_content))
+                end
+            end
+        end
+    end
+    return nil
+end
+
 -- Function to find and insert blocks from Neorg files.
 -- This function searches for task blocks within Neorg files and allows the user to insert
 -- the selected block into the current buffer.
@@ -122,7 +179,7 @@ function M.neorg_block_injector()
     local base_directory = current_workspace[2]
 
     -- Define search pattern for different levels of task blocks
-    local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* "]]
+    local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* |^\*\*\*\*\*\* "]]
 
     -- Run ripgrep to find matching lines in .norg files
     local rg_command = 'rg '
@@ -135,9 +192,8 @@ function M.neorg_block_injector()
     -- Process the ripgrep results
     local matches = {}
     for line in rg_results:gmatch("([^\n]+)") do
-        local file = line:match("^[^:]+")
-        local lineno = line:match("^[^:]+:([^:]+):")
-        local text = line:match("[^:]+$")
+        local pattern = "([^:]+):(%d+):(.*)"
+        local file, lineno, text = line:match(pattern)
         local metadata = meta_man.extract_file_metadata(file)
         if metadata ~= nil then
             table.insert(matches, { file, lineno, text, metadata["title"] })
@@ -182,25 +238,23 @@ function M.neorg_block_injector()
                     local base_path = base_directory:gsub("([^%w])", "%%%1")
                     local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
                     -- Insert at the cursor location
-                    local heading_text = "%(.-%)%s*"
-                    -- Check task extract the string after them
-                    local heading_if_task = string.match(entry.line, "%)%s*(.+)")
-                    if not heading_if_task then
-                        -- If not, the entire line is the string
-                        heading_if_task = entry.line:gsub("^%s*(.-)%s*$", "%1")
+                    local heading_prefix = string.match(entry.line, "^(%** )")
+                    local heading_text = get_heading_text(filename, entry.lnum)
+                    if not heading_text then
+                        return
+                    else
+                        heading_text = heading_text:gsub("^%s+", "")
                     end
-                    -- Remove the content inside the parentheses and the parentheses themselves
-                    local string_without_parentheses = string.gsub(entry.line, heading_text, "")
-                    string_without_parentheses = string_without_parentheses:gsub("^%s*(.-)%s*$", "%1")
+                    local full_heading_text = heading_prefix .. heading_text
+
                     actions.close(prompt_bufnr)
                     vim.api.nvim_put({ "{:$/" ..
                         rel_path ..
                         ":" ..
-                        string_without_parentheses ..
+                        full_heading_text ..
                         "}[" ..
-                        heading_if_task ..
+                        heading_text ..
                         "]" }, "", false,
-                        -- vim.api.nvim_put({ "{:$/" .. rel_path .. ":" .. entry.line .. "}[" .. entry.line .. "]" }, "", false,
                         true)
                 end)
                 return true
