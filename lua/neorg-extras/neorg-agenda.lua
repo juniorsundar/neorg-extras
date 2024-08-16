@@ -76,7 +76,13 @@ function M.day_view()
     table.insert(buffer_lines, "")
     table.insert(buffer_lines, "")
 
-    local task_list = task_man.filter_tasks({ "undone", "pending", "hold", "important", "ambiguous" })
+    local task_list = task_man.filter_tasks({
+        "undone",
+        "pending",
+        "hold",
+        "important",
+        "ambiguous"
+    })
 
     local today = {}
     local overdue = {}
@@ -324,6 +330,17 @@ function M.day_view()
     end
 
     local _, _ = buff_man.create_view_buffer(buffer_lines)
+end
+
+--- Generate Tag View
+function M.tag_view()
+    local task_list = task_man.filter_tasks({ 
+        "undone",
+        "pending",
+        "hold",
+        "important",
+        "ambiguous"
+    })
 end
 
 -- Define Neovim command 'NeorgExtras' to process user input
