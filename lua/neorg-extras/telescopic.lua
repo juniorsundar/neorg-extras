@@ -55,7 +55,6 @@ function M.neorg_node_injector()
             }),
             previewer = conf.file_previewer(opts),
             sorter = conf.file_sorter(opts),
-            layout_strategy = "vertical",
             attach_mappings = function(prompt_bufnr, map)
                 -- Map <C-i> to insert the selected node into the current buffer
                 map('i', '<C-i>', function()
@@ -229,7 +228,6 @@ function M.neorg_block_injector()
             }),
             previewer = conf.grep_previewer(opts),
             sorter = conf.file_sorter(opts),
-            layout_strategy = "vertical",
             attach_mappings = function(prompt_bufnr, map)
                 -- Map <C-i> to insert the selected block into the current buffer
                 map('i', '<C-i>', function()
@@ -296,7 +294,6 @@ function M.neorg_workspace_selector()
             }),
             previewer = conf.file_previewer(opts),
             sorter = conf.file_sorter(opts),
-            layout_strategy = "bottom_pane",
             attach_mappings = function(prompt_bufnr, map)
                 -- Map <CR> to switch to the selected workspace
                 map('i', '<CR>', function()
@@ -383,7 +380,6 @@ function M.show_backlinks()
             }),
             previewer = conf.grep_previewer(opts),
             sorter = conf.file_sorter(opts),
-            layout_strategy = "bottom_pane",
         })
         :find()
 end
