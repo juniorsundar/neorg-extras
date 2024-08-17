@@ -56,7 +56,7 @@ function M.day_view()
     -- Get the current weekday and adjust it to treat Monday as the start of the week
     local current_weekday = tonumber(os.date("%w", os.time(timetable)))
     current_weekday = (current_weekday == 0) and 7 or
-    current_weekday                                                   -- Adjust Sunday (0) to be the last day of the week (7)
+        current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
 
     -- Calculate the start of the week (Monday)
     local start_of_week_timestamp = os.time(timetable) - ((current_weekday - 1) * 24 * 60 * 60)
@@ -317,7 +317,7 @@ function M.day_view()
     for _, task in ipairs(miscellaneous) do
         local unscheduled_str = "*"
         unscheduled_str = unscheduled_str ..
-        "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+            "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
 
         local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
         local tags_str = "`untagged`"
@@ -334,13 +334,27 @@ end
 
 --- Generate Tag View
 function M.tag_view()
-    local task_list = task_man.filter_tasks({ 
+    local task_list = task_man.filter_tasks({
         "undone",
         "pending",
         "hold",
         "important",
         "ambiguous"
     })
+    local tag_task_table = {}
+    for _, task in ipairs(task_list) do
+        if task.tag then
+            for _, tag in ipairs(task.tag) do
+                if not tag_task_table[tag] then
+                    tag_task_table[tag] = {}
+                end
+                table.insert(tag_task_table[tag], task)
+            end
+        end
+    end
+
+
+
 end
 
 -- Define Neovim command 'NeorgExtras' to process user input
@@ -353,6 +367,8 @@ vim.api.nvim_create_user_command(
             M.page_view(input_list)
         elseif input_list[1] == "Day" then
             M.day_view()
+        elseif input_list[1] == "Tag" then
+            M.tag_view()
         elseif input_list[1] == "Metadata" then
             local _ = table.remove(input_list, 1)
             if input_list[1] == "update" then
