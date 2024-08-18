@@ -270,7 +270,7 @@ this may not be the plugin for you.
 
 ### Page View
 
-![Neorg Page View]()
+![Neorg Page View](https://imgur.com/DdVAiQX)
 
 This will show all tasks filtered by the provided task states and turn it into
 a paginated view.
@@ -300,22 +300,32 @@ The agenda view can be closed with `q`.
 
 ### Day View (TM)
 
-![Neorg Day View](https://i.imgur.com/oFZmfd0.png)
+![Neorg Day View](https://imgur.com/Qaptzbq)
 
 This will sort tasks according to a day view. Something similar to
 `org-agenda` but with my own flavour.
+
+Note that the method I am using to assign "metadata" to tasks is not the
+official way to do things. That is still awaiting an update of the tree-sitter
+parser. I don't know how long that will take. And as someone who wants to
+organise their life yesterday, I can't afford to wait that long. Hence:
 
 `NeorgExtras Day`
 
 You will notice that all of your tasks in the workspace are uncategorised. This
 is because we haven't added the property `ranged_verbatim_tag` that is used
 in this plugin-plugin (plugin^2?) to define the sorting categories for the
-agenda.
+agenda. You can populate the property tag by checking out [this](#the-property-metadata).
 
-Note that the method I am using to assign "metadata" to tasks is not the
-official way to do things. That is still awaiting an update of the tree-sitter
-parser. I don't know how long that will take. And as someone who wants to
-organise their life yesterday, I can't afford to wait that long. Hence:
+### Tag View
+
+![Neorg Tag View](https://imgur.com/GEspcD3)
+
+You can also sort tasks by tags. This is useful if you want to sort them
+according to projects or pertinent categories. Make sure to include tags in the
+property metadata under your tasks if you want these to be sorted.
+
+`NeorgExtras Tag`
 
 ## The Property Metadata
 
