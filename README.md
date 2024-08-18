@@ -270,7 +270,7 @@ this may not be the plugin for you.
 
 ### Page View
 
-![Neorg Page View](https://imgur.com/DdVAiQX)
+![Neorg Page View](https://i.imgur.com/DdVAiQX.png)
 
 This will show all tasks filtered by the provided task states and turn it into
 a paginated view.
@@ -300,7 +300,7 @@ The agenda view can be closed with `q`.
 
 ### Day View (TM)
 
-![Neorg Day View](https://imgur.com/Qaptzbq)
+![Neorg Day View](https://i.imgur.com/Qaptzbq.png)
 
 This will sort tasks according to a day view. Something similar to
 `org-agenda` but with my own flavour.
@@ -319,7 +319,7 @@ agenda. You can populate the property tag by checking out [this](#the-property-m
 
 ### Tag View
 
-![Neorg Tag View](https://imgur.com/GEspcD3)
+![Neorg Tag View](https://i.imgur.com/GEspcD3.png)
 
 You can also sort tasks by tags. This is useful if you want to sort them
 according to projects or pertinent categories. Make sure to include tags in the
