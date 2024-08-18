@@ -12,6 +12,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 </div>
 
 <!--toc:start-->
+- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -39,6 +40,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
   - [Views](#views)
     - [Page View](#page-view)
     - [Day View (TM)](#day-view-tm)
+    - [Tag View](#tag-view)
   - [The Property Metadata](#the-property-metadata)
       - [Sorting-out my Life](#sorting-out-my-life)
 - [To-Do](#to-do)
