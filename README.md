@@ -76,16 +76,18 @@ This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installat
 return {
     "nvim-neorg/neorg",
     dependencies = {
-        { "juniorsundar/neorg_extras",
-            opts = {
-                treesitter_fold = true, -- Default is already true
-            } 
-        },
+        "juniorsundar/neorg-extras",
         "nvim-telescope/telescope.nvim", -- Required for the Neorg-Roam features
         "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
     },
     config = function()
-        -- ... Your configs
+        require('neorg').setup({
+            load = {
+                ["externals.agenda"] = {},
+                ["externals.roam"] = {},
+                -- And if you're a 50-cent fan
+                ["externals.many-mans"] = {},
+            })
 
         -- I add this line here because I want to open 
         -- up the default Neorg workspace whenever a Neovim instance
@@ -123,7 +125,7 @@ plugin and simply skip the Neorg-Roam feature-set.
 
 ### Function
 
-`Telescope neorg_workspace_selector`
+`Neorg roam select_workspace`
 
 ### Default Mappings
 
@@ -170,7 +172,7 @@ unique filename into a `vault` folder in the workspace root.
 
 ### Function
 
-`Telescope neorg_node_injector`
+`Neorg roam node`
 
 ### Default Mappings
 
@@ -206,7 +208,7 @@ You want to insert the block into your cursor location as a link.
 
 ### Function
 
-`Telescope neorg_block_injector`
+`Neorg roam block`
 
 ### Default Mappings
 
@@ -235,6 +237,10 @@ Since we are swearing off the file-tree, we need a way to conveniently navigate 
 You want to determine all backlinks to current node, preview them, and navigate to them.
 
 ### Function
+
+`Neorg roam backlinks`
+
+### Default Mappings
 
 | Mappings | Action                                                                        |
 |----------|-------------------------------------------------------------------------------|
@@ -277,7 +283,7 @@ this may not be the plugin for you.
 This will show all tasks filtered by the provided task states and turn it into
 a paginated view.
 
-`NeorgExtras Page <task-states>`
+`Neorg agenda page <task-states>`
 
 You can list out all possible Neorg task states:
 
@@ -312,7 +318,7 @@ official way to do things. That is still awaiting an update of the tree-sitter
 parser. I don't know how long that will take. And as someone who wants to
 organise their life yesterday, I can't afford to wait that long. Hence:
 
-`NeorgExtras Day`
+`Neorg agenda day`
 
 You will notice that all of your tasks in the workspace are uncategorised. This
 is because we haven't added the property `ranged_verbatim_tag` that is used
@@ -327,7 +333,7 @@ You can also sort tasks by tags. This is useful if you want to sort them
 according to projects or pertinent categories. Make sure to include tags in the
 property metadata under your tasks if you want these to be sorted.
 
-`NeorgExtras Tag`
+`Neorg agenda tag`
 
 ## The Property Metadata
 
@@ -351,7 +357,7 @@ So it no longer will take up your visual space.
 Of course, this plug(plugin)in(?) makes your life a lot easier by exposing the
 following function:
 
-`NeorgExtras Metadata update`
+`Neorg update_property_metadata`
 
 This function doesn't discriminate between task headings or regular headings
 (at the moment... I will fix that later).
@@ -375,9 +381,9 @@ support for finer sorting yet).
 ## Primary
 
 - [x] Deadline and time based scheduling
-- [-] Sorting by dates, tags, etc.
+- [x] Sorting by dates, tags, etc.
     - [x] Sorting by date and priority (default)
-    - [-] Sorting by tags
+    - [x] Sorting by tags
 - [ ] Better UI for property tag population (especially dates and times)
 - [ ] Wrapper around task changer to auto-generate property metadata
 - [ ] Alternate views (open to discussion)

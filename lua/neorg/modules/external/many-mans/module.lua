@@ -9,6 +9,7 @@ module.setup = function()
     return {
         success = true,
         requires = {
+            "core.neorgcmd",
             "core.integrations.treesitter",
             "core.dirman",
             "core.esupports.hop"
@@ -21,10 +22,23 @@ module.config.public = {
 }
 
 module.load = function()
+    module.required["core.neorgcmd"].add_commands_from_table({
+        ["update_property_metadata"] = {
+            args = 0,
+            name = "external.many-mans.meta-man.update_property_metadata",
+        },
+    })
+
     if module.config.public.treesitter_fold then
         module.public["meta-man"].setup_treesitter_folding()
     end
 end
+
+module.events.subscribed = {
+    ["core.neorgcmd"] = {
+        ["external.many-mans.meta-man.update_property_metadata"] = true,
+    },
+}
 
 module.public = {
     -- Helps know what to look for
@@ -590,5 +604,13 @@ module.public = {
         end
     }
 }
+
+module.on_event = function(event)
+    -- vim.notify(vim.inspect(event))
+    if event.split_type[2] == "external.many-mans.meta-man.update_property_metadata" then
+        module.public["meta-man"].update_property_metadata()
+    end
+end
+
 
 return module
