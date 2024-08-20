@@ -126,8 +126,8 @@ module.private = {
         })
 
         local is_today = (task.deadline.year - tonumber(os.date("%Y")) == 0) and
-        (task.deadline.month - tonumber(os.date("%m")) == 0) and
-        (task.deadline.day - tonumber(os.date("%d")) == 0)
+            (task.deadline.month - tonumber(os.date("%m")) == 0) and
+            (task.deadline.day - tonumber(os.date("%d")) == 0)
 
         local years_diff = nil
         local months_diff = nil
@@ -240,7 +240,7 @@ module.public = {
         -- Get the current weekday and adjust it to treat Monday as the start of the week
         local current_weekday = tonumber(os.date("%w", os.time(timetable)))
         current_weekday = (current_weekday == 0) and 7 or
-        current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
+            current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
 
         table.insert(buffer_lines, "")
         table.insert(buffer_lines, "")
@@ -257,8 +257,8 @@ module.public = {
                 if current_file then
                     table.insert(buffer_lines, "")
                 end
-                local file_metadata = module.required["external.many-mans"]["meta_man"].extract_file_metadata(entry
-                    .filename)
+                local file_metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(entry
+                .filename)
                 -- table.insert(buffer_lines, "___")
                 table.insert(buffer_lines, "")
                 if file_metadata then
@@ -274,7 +274,7 @@ module.public = {
         -- table.insert(buffer_lines, "___")
 
         -- Write formatted lines to the buffer
-        local _, _ = module.required["external.many-mans"]["buff_man"].create_view_buffer(buffer_lines)
+        local _, _ = module.required["external.many-mans"]["buff-man"].create_view_buffer(buffer_lines)
     end,
 
     --- Generate the Agenda Day View
@@ -295,7 +295,7 @@ module.public = {
         -- Get the current weekday and adjust it to treat Monday as the start of the week
         local current_weekday = tonumber(os.date("%w", os.time(timetable)))
         current_weekday = (current_weekday == 0) and 7 or
-        current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
+            current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
 
         -- Calculate the start of the week (Monday)
         local start_of_week_timestamp = os.time(timetable) - ((current_weekday - 1) * 24 * 60 * 60)
@@ -317,7 +317,7 @@ module.public = {
         table.insert(buffer_lines, "")
         table.insert(buffer_lines, "")
 
-        local task_list = module.required["external.many-mans"]["task_man"].filter_tasks({
+        local task_list = module.required["external.many-mans"]["task-man"].filter_tasks({
             "undone",
             "pending",
             "hold",
@@ -376,7 +376,7 @@ module.public = {
         for _, task in ipairs(miscellaneous) do
             local unscheduled_str = "*"
             unscheduled_str = unscheduled_str ..
-            "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+                "{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
 
             local task_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
             local tags_str = "`untagged`"
@@ -388,7 +388,7 @@ module.public = {
             table.insert(buffer_lines, line_str)
         end
 
-        local _, _ = module.required["external.many-mans"]["buff_man"].create_view_buffer(buffer_lines)
+        local _, _ = module.required["external.many-mans"]["buff-man"].create_view_buffer(buffer_lines)
     end,
 
     --- Generate Tag View
@@ -409,7 +409,7 @@ module.public = {
         -- Get the current weekday and adjust it to treat Monday as the start of the week
         local current_weekday = tonumber(os.date("%w", os.time(timetable)))
         current_weekday = (current_weekday == 0) and 7 or
-        current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
+            current_weekday -- Adjust Sunday (0) to be the last day of the week (7)
 
         local current_time = os.time()
 
@@ -424,7 +424,7 @@ module.public = {
         table.insert(buffer_lines, "")
         table.insert(buffer_lines, "")
 
-        local task_list = module.required["external.many-mans"]["task_man"].filter_tasks({
+        local task_list = module.required["external.many-mans"]["task-man"].filter_tasks({
             "undone",
             "pending",
             "hold",
@@ -450,18 +450,18 @@ module.public = {
             module.private.insert_task_lines(buffer_lines, "`" .. key .. "`", tasks, current_time)
         end
 
-        local _, _ = module.required["external.many-mans"]["buff_man"].create_view_buffer(buffer_lines)
+        local _, _ = module.required["external.many-mans"]["buff-man"].create_view_buffer(buffer_lines)
     end
 }
 
 module.on_event = function(event)
-    vim.notify(vim.inspect(event))
+    -- vim.notify(vim.inspect(event))
     if event.split_type[2] == "external.agenda.page" then
-        vim.notify("page")
+        module.public.page_view(event.content)
     elseif event.split_type[2] == "external.agenda.day" then
-        vim.notify("day")
+        module.public.day_view()
     elseif event.split_type[2] == "external.agenda.tag" then
-        vim.notify("tag")
+        module.public.tag_view()
     end
 end
 

@@ -16,6 +16,16 @@ module.setup = function()
     }
 end
 
+module.config.public = {
+    treesitter_fold = true,
+}
+
+module.load = function()
+    if module.config.public.treesitter_fold then
+        module.public["meta-man"].setup_treesitter_folding()
+    end
+end
+
 module.public = {
     -- Helps know what to look for
     ["meta-man"] = {
