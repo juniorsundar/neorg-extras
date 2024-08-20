@@ -35,6 +35,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
     - [Rationale](#rationale)
     - [Use-Case](#use-case)
     - [Function](#function)
+    - [Default Mappings](#default-mappings)
 - [Neorg-Agenda](#neorg-agenda)
   - [Rationale](#rationale)
   - [Views](#views)
