@@ -329,6 +329,7 @@ module.public = {
         local overdue = {}
         local this_week = {}
         local next_week = {}
+        local scheduled = {}
         local miscellaneous = {}
 
         -- Categorize and sort tasks
@@ -353,6 +354,8 @@ module.public = {
                     table.insert(this_week, task)
                 elseif task_time <= end_of_next_week_timestamp then
                     table.insert(next_week, task)
+                elseif task_time > end_of_next_week_timestamp then
+                    table.insert(scheduled, task)
                 else
                     table.insert(miscellaneous, task)
                 end
@@ -364,13 +367,15 @@ module.public = {
         -- Sort each category
         table.sort(today, module.private.sort_today_tasks)
         table.sort(overdue, module.private.sort_by_time_and_priority)
-        table.sort(this_week, module.private.sort_by_time_and_priority)
+        table.sort(scheduled, module.private.sort_by_time_and_priority)
         table.sort(next_week, module.private.sort_by_time_and_priority)
+        table.sort(this_week, module.private.sort_by_time_and_priority)
 
         module.private.insert_task_lines(buffer_lines, "Today", today, current_time)
         module.private.insert_task_lines(buffer_lines, "Overdue", overdue, current_time)
         module.private.insert_task_lines(buffer_lines, "This Week", this_week, current_time)
         module.private.insert_task_lines(buffer_lines, "Next Week", next_week, current_time)
+        module.private.insert_task_lines(buffer_lines, "Scheduled", scheduled, current_time)
 
         table.insert(buffer_lines, "** Miscellaneous")
         for _, task in ipairs(miscellaneous) do
