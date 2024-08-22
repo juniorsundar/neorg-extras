@@ -12,7 +12,6 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 </div>
 
 <!--toc:start-->
-- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -48,10 +47,6 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
   - [Primary](#primary)
   - [Secondary](#secondary)
 <!--toc:end-->
-
-> [!NOTE]
-> 
-> TODO Add Screenshots
 
 > [!warning]
 > 
@@ -351,10 +346,6 @@ tag: tag1, tag2, ...
 priority: A/B/C ...
 @end
 ```
-
-~~Fair warning, this verbose property tag will not conceal, so you are going to
-have this chunk in your view. You should decide if you can live with that.
-Because if you can, only then can you access the Day View (TM).~~
 
 There is tree-sitter folding for the `ranged_verbatim_tag` labeled `data`.
 So it no longer will take up your visual space.
