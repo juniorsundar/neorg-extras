@@ -387,11 +387,11 @@ module.public = {
 
         -- Process the ripgrep results to identify backlinks
         local matches = {}
-        local self_title = module.required["external.many-mans"]["meta_man"].extract_file_metadata(current_file_path)
+        local self_title = module.required["external.many-mans"]["meta-man"].extract_file_metadata(current_file_path)
         ["title"]
         for line in rg_results:gmatch("([^\n]+)") do
             local file, lineno = line:match("^(.-):(%d+):")
-            local metadata = module.required["external.many-mans"]["meta_man"].extract_file_metadata(file)
+            local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
             if metadata == nil then
                 table.insert(matches, { file, lineno, "Untitled" })
             elseif metadata["title"] ~= self_title then
@@ -400,6 +400,7 @@ module.public = {
                 table.insert(matches, { file, lineno, "Untitled" })
             end
         end
+        vim.notify(vim.inspect(matches))
 
         local opts = {}
         opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
@@ -437,9 +438,9 @@ module.on_event = function(event)
         module.public.node()
     elseif event.split_type[2] == "external.roam.block" then
         module.public.block()
-    elseif event.split_type[2] == "external.agenda.backlinks" then
+    elseif event.split_type[2] == "external.roam.backlinks" then
         module.public.backlinks()
-    elseif event.split_type[2] == "external.agenda.select_workspace" then
+    elseif event.split_type[2] == "external.roam.select_workspace" then
         module.public.workspace_selector()
     end
 end
