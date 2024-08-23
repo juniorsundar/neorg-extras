@@ -44,23 +44,26 @@ module.public = {
     -- Helps know what to look for
     ["meta-man"] = {
         setup_treesitter_folding = function()
-            -- Ensure the 'norg' parser is installed and loaded
-            local neorg_folds_file = vim.fn.stdpath("data") .. "/lazy/neorg/queries/norg/folds.scm"
-            local _ = require("nvim-treesitter.parsers").get_parser_configs().norg
-
             local property_query = [[
             (ranged_verbatim_tag
               name: (tag_name) @name (#eq? @name "data")) @fold
             ]]
-
             local neorg_query = ""
-            if vim.fn.filereadable(neorg_folds_file) == 1 then
-                neorg_query = table.concat(vim.fn.readfile(neorg_folds_file), "\n")
-            else
-                vim.api.nvim_err_writeln("Failed to find Neorg Tree-sitter query file: " .. neorg_folds_file)
+
+            local neorg_folds_file = ""
+            for _, rtp in ipairs(vim.fn.split(vim.opt.rtp["_value"], ",")) do
+                neorg_folds_file = rtp .. "/queries/norg/folds.scm"
+                if vim.fn.filereadable(neorg_folds_file) == 1 then
+                    neorg_query = table.concat(vim.fn.readfile(neorg_folds_file), "\n")
+                end
             end
-            local combined_query = neorg_query .. "\n" .. property_query
-            vim.treesitter.query.set("norg", "folds", combined_query)
+            if neorg_query ~= "" then
+                local combined_query = neorg_query .. "\n" .. property_query
+                local _ = require("nvim-treesitter.parsers").get_parser_configs().norg
+                vim.treesitter.query.set("norg", "folds", combined_query)
+            else
+                vim.notify("Failed to find Neorg Tree-sitter query file in runtimepath.", vim.log.levels.WARN)
+            end
         end,
 
         is_present_property_metadata = function(bufnr)
@@ -262,10 +265,10 @@ module.public = {
                                 end)
                         else
                             local text = prop_table[key].year ..
-                                "-" ..
-                                prop_table[key].month ..
-                                "-" ..
-                                prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
+                            "-" ..
+                            prop_table[key].month ..
+                            "-" ..
+                            prop_table[key].day .. "|" .. prop_table[key].hour .. ":" .. prop_table[key].minute
                             vim.ui.input(
                                 { prompt = "Enter " .. key .. " date-time (YYYY-MM-DD|HH:MM): ", default = text },
                                 function(input)
@@ -468,7 +471,7 @@ module.public = {
 
         find_tasks_in_workspace = function(base_directory)
             local rg_command = [[rg '^\*{1,8} \(\s*(-?)\s*x*\?*!*_*\+*=*\)' --glob '*.norg' --line-number ]] ..
-                base_directory
+            base_directory
             return vim.fn.systemlist(rg_command)
         end,
 
@@ -541,7 +544,7 @@ module.public = {
             -- to get file row
             if parsed_link.link_location_text then
                 local search = "rg -n -o --no-filename --fixed-strings " ..
-                    "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
+                "') " .. parsed_link.link_location_text .. "' " .. parsed_link.link_file_text .. " | cut -d: -f1"
                 local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
 
                 vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
