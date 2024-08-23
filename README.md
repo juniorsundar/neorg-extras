@@ -84,10 +84,14 @@ return {
     config = function()
         require('neorg').setup({
             load = {
-                ["externals.agenda"] = {},
-                ["externals.roam"] = {},
-                -- And if you're a 50-cent fan
-                ["externals.many-mans"] = {},
+                ["external.agenda"] = {}, -- OPTIONAL if you don't want the agenda features
+                ["external.roam"] = {}, -- OPTIONAL if you don't want the roam features
+                -- MANDATORY and if you're a 50-cent fan
+                ["external.many-mans"] = {
+                  config = {
+                    treesitter_fold = true -- Set to 'false' if your package manager is currently NOT lazy.nvim
+                  }
+                },
             })
 
         -- I add this line here because I want to open 
