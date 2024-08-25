@@ -470,6 +470,39 @@ module.public = {
 			["?"] = "",
 		},
 
+        -- Define the possible task states and their transitions
+        task_transitions = {
+            undone = {
+                {label = "Cancel", next_state = "cancelled"},
+                {label = "Pending", next_state = "pending"},
+                {label = "Ambiguous", next_state = "ambiguous"},
+                {label = "Important", next_state = "important"},
+                {label = "Recurring", next_state = "recurring"},
+            },
+            pending = {
+                {label = "Done", next_state = "done"},
+                {label = "Cancel", next_state = "cancelled"},
+                {label = "Hold", next_state = "hold"},
+            },
+            hold = {
+                {label = "Pending", next_state = "pending"},
+            },
+            ambiguous = {
+                {label = "Cancel", next_state = "cancelled"},
+                {label = "Pending", next_state = "pending"},
+            },
+            important = {
+                {label = "Cancel", next_state = "cancelled"},
+                {label = "Pending", next_state = "pending"},
+            },
+            recurring = {
+                {label = "Done", next_state = "done"},
+                {label = "Cancel", next_state = "cancelled"},
+            },
+            cancelled = {},
+            done = {},
+        },
+
 		blacklist_states = function(input_list)
 			local filtered_state_icons = {}
 			for state, symbol in pairs(module.public["task-man"].state_to_symbol_mapping) do
@@ -524,6 +557,35 @@ module.public = {
 
 			return task_list
 		end,
+
+        --- A wrapper around task toggler
+        --- Needs to handle task cycling in a more interactive way.
+        --- get current -> offer options for next
+        cycle_task = function()
+            -- undone -> cancelled
+            -- undone -> pending -> done
+            -- undone -> pending -> cancelled
+            -- undone -> pending -> hold -> pending -> done
+            -- undone -> pending -> hold -> pending -> cancelled
+            --
+            -- undone -> ambiguous -> cancelled
+            -- undone -> ambiguous -> pending -> done
+            -- undone -> ambiguous -> pending -> cancelled
+            -- undone -> ambiguous -> pending -> hold -> pending -> done
+            -- undone -> ambiguous -> pending -> hold -> pending -> cancelled
+            -- undone -> important -> cancelled
+            -- undone -> important -> pending -> done
+            -- undone -> important -> pending -> cancelled
+            -- undone -> important -> pending -> hold -> pending -> done
+            -- undone -> important -> pending -> hold -> pending -> cancelled
+            --
+            -- undone -> recurring -> done
+            -- undone -> recurring -> cancelled
+            --
+            -- Create task, populate deadline
+            -- Leave undone, populate started
+
+        end,
 	},
 
 	-- Too stronk!
