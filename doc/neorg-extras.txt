@@ -1,4 +1,4 @@
-*neorg-extras.txt*       For Neovim >= 0.8.0       Last change: 2024 August 24
+*neorg-extras.txt*       For Neovim >= 0.8.0       Last change: 2024 August 27
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
