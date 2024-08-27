@@ -566,10 +566,6 @@ module.public = {
 				vim.cmd("edit " .. parsed_link.link_file_text)
 			end
 			vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
-			-- Populate the default_winopts table with current window options
-			for _, opt in ipairs(module.public["buff-man"].default_winopts) do
-				vim.api.nvim_set_option_value(opt[1], opt[2], { win = module.public["buff-man"].win })
-			end
 		end,
 
 		--- Standard buffer to display agendas
