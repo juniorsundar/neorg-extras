@@ -40,6 +40,39 @@ module.events.subscribed = {
 	},
 }
 
+module.private = {
+    get_heading_node_tree = function(bufnr)
+        local parser = vim.treesitter.get_parser(bufnr, "norg")
+        local tree = parser:parse()[1]
+
+        -- Get the current cursor position
+        local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0))
+        cursor_row = cursor_row - 1
+
+        -- Define the query for all heading levels
+        local heading_query_string = [[
+            (heading6) @heading6
+            (heading5) @heading5
+            (heading4) @heading4
+            (heading3) @heading3
+            (heading2) @heading2
+            (heading1) @heading1
+            ]]
+
+        -- Create the query object for headings
+        local heading_query = vim.treesitter.query.parse("norg", heading_query_string)
+
+        local node_tree = {}
+        for _, node, _, _ in heading_query:iter_captures(tree:root(), bufnr, 0, -1) do
+            local row1, _, row2, _ = node:range()
+            if row1 <= cursor_row and row2 >= cursor_row then
+                table.insert(node_tree, node)
+            end
+        end
+        return node_tree
+    end,
+}
+
 module.public = {
 	-- Helps know what to look for
 	["meta-man"] = {
@@ -71,20 +104,6 @@ module.public = {
 			local parser = vim.treesitter.get_parser(bufnr, "norg")
 			local tree = parser:parse()[1]
 
-			-- Get the current cursor position
-			local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(0))
-			cursor_row = cursor_row - 1
-
-			-- Define the query for all heading levels
-			local heading_query_string = [[
-            (heading6) @heading6
-            (heading5) @heading5
-            (heading4) @heading4
-            (heading3) @heading3
-            (heading2) @heading2
-            (heading1) @heading1
-            ]]
-
 			-- Define the query for ranged_verbatim_tag
 			local verbatim_query_string = [[
             (ranged_verbatim_tag
@@ -93,17 +112,9 @@ module.public = {
                   (tag_param) @tag_parameter))
             ]]
 
-			-- Create the query object for headings and tags
-			local heading_query = vim.treesitter.query.parse("norg", heading_query_string)
 			local verbatim_query = vim.treesitter.query.parse("norg", verbatim_query_string)
 
-			local node_tree = {}
-			for _, node, _, _ in heading_query:iter_captures(tree:root(), bufnr, 0, -1) do
-				local row1, _, row2, _ = node:range()
-				if row1 < cursor_row and row2 >= cursor_row then
-					table.insert(node_tree, node)
-				end
-			end
+			local node_tree = module.private.get_heading_node_tree(bufnr)
 			local is_ranged_verbatim = false
 			local is_property = false
 			local property_line = nil
@@ -558,6 +569,27 @@ module.public = {
 			return task_list
 		end,
 
+        --- Get the state of the current task
+
+        get_task_state = function(bufnr)
+			bufnr = bufnr or vim.api.nvim_get_current_buf()
+            local node_tree = module.private.get_heading_node_tree(bufnr)
+            local curr_heading = nil
+            if #node_tree > 0 then
+                curr_heading = vim.treesitter.get_node_text(node_tree[#node_tree], bufnr)
+            else
+                vim.notify("Not under a heading", vim.log.levels.WARN)
+                return nil
+            end
+            -- Take out the state
+            local state = curr_heading:match("%((.)")
+            for key, value in pairs(module.public["task-man"].state_to_symbol_mapping) do
+                if state == value then
+                    return key
+                end
+            end
+        end,
+
         --- A wrapper around task toggler
         --- Needs to handle task cycling in a more interactive way.
         --- get current -> offer options for next
@@ -584,7 +616,8 @@ module.public = {
             --
             -- Create task, populate deadline
             -- Leave undone, populate started
-
+            local task_state = module.public["task-man"].get_task_state(vim.api.nvim_get_current_buf())
+            print(task_state)
         end,
 	},
 
