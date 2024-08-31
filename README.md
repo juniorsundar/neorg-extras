@@ -43,6 +43,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
     - [Tag View](#tag-view)
   - [The Property Metadata](#the-property-metadata)
       - [Sorting-out my Life](#sorting-out-my-life)
+  - [Interactive Task Cycling](#interactive-task-cycling)
 - [To-Do](#to-do)
   - [Primary](#primary)
   - [Secondary](#secondary)
@@ -372,6 +373,53 @@ uncategorised tasks and start assigning them a started and deadline property.
 Maybe add a tag? You could also add a property (but I haven't implemented
 support for finer sorting yet).
 
+## Interactive Task Cycling
+
+Manually changing task states and updating metadata to reflect that can grow
+tedious after a point. Its basically doing the same thing twice. And who wants
+to waste time looking at a clock and writing down the time to log their tasks?
+Vim is (after all) all about reducing redundancy and wasted time, and so the
+command:
+
+`Neorg cycle_task`
+
+Compresses task state update and property metadata update into one. Calling
+this function on a heading that is or isn't a task will initiate the
+interactive task cycling process. The general sequencing of task states are as
+follows:
+
+```txt
+# Task Transitions
+undone -> cancelled
+undone -> pending -> done
+undone -> pending -> cancelled
+undone -> pending -> hold -> pending -> done
+undone -> pending -> hold -> pending -> cancelled
+
+undone -> ambiguous -> cancelled
+undone -> ambiguous -> pending -> done
+undone -> ambiguous -> pending -> cancelled
+undone -> ambiguous -> pending -> hold -> pending -> done
+undone -> ambiguous -> pending -> hold -> pending -> cancelled
+undone -> important -> cancelled
+undone -> important -> pending -> done
+undone -> important -> pending -> cancelled
+undone -> important -> pending -> hold -> pending -> done
+undone -> important -> pending -> hold -> pending -> cancelled
+
+undone -> recurring -> done
+undone -> recurring -> cancelled
+```
+
+Furthermore, the time properties are populated automatically given the
+following state changes:
+- When creating task -> populate deadline
+- When leaving undone -> populate started
+- When entering cancelled or done -> populate completed
+
+With this command, I hope that users will waste less time manually messing
+around with the property metadata, and focus more on getting things done.
+
 # To-Do
 
 ## Primary
@@ -380,8 +428,8 @@ support for finer sorting yet).
 - [x] Sorting by dates, tags, etc.
     - [x] Sorting by date and priority (default)
     - [x] Sorting by tags
-- [ ] Better UI for property tag population (especially dates and times)
-- [ ] Wrapper around task changer to auto-generate property metadata
+- [x] Better UI for property tag population (especially dates and times)
+- [x] Wrapper around task changer to auto-generate property metadata
 - [ ] Alternate views (open to discussion)
 - [ ] Permalinking for Neorg-Roam
 - [ ] Better UI for Backlinks (Telescope/Fuzzy finder is too distracting)
