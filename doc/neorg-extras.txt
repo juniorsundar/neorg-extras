@@ -1,4 +1,4 @@
-*neorg-extras.txt*       For Neovim >= 0.8.0       Last change: 2024 August 27
+*neorg-extras.txt*       For Neovim >= 0.8.0       Last change: 2024 August 31
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -16,6 +16,7 @@ Table of Contents                             *neorg-extras-table-of-contents*
   - Rationale                            |neorg-extras-neorg-agenda-rationale|
   - Views                                    |neorg-extras-neorg-agenda-views|
   - The Property Metadata    |neorg-extras-neorg-agenda-the-property-metadata|
+  - Interactive Task Cycling|neorg-extras-neorg-agenda-interactive-task-cycling|
 5. To-Do                                                  |neorg-extras-to-do|
   - Primary                                       |neorg-extras-to-do-primary|
   - Secondary                                   |neorg-extras-to-do-secondary|
@@ -53,6 +54,7 @@ Table of Contents                             *neorg-extras-table-of-contents*
         - |neorg-extras-tag-view|
     - |neorg-extras-the-property-metadata|
         - |neorg-extras-sorting-out-my-life|
+    - |neorg-extras-interactive-task-cycling|
 - |neorg-extras-to-do|
     - |neorg-extras-primary|
     - |neorg-extras-secondary|
@@ -420,6 +422,53 @@ I would suggest that you open your Day View (TM) and start going through your
 uncategorised tasks and start assigning them a started and deadline property.
 Maybe add a tag? You could also add a property (but I haven’t implemented
 support for finer sorting yet).
+
+
+INTERACTIVE TASK CYCLING  *neorg-extras-neorg-agenda-interactive-task-cycling*
+
+Manually changing task states and updating metadata to reflect that can grow
+tedious after a point. Its basically doing the same thing twice. And who wants
+to waste time looking at a clock and writing down the time to log their tasks?
+Vim is (after all) all about reducing redundancy and wasted time, and so the
+command:
+
+`Neorg cycle_task`
+
+Compresses task state update and property metadata update into one. Calling
+this function on a heading that is or isn’t a task will initiate the
+interactive task cycling process. The general sequencing of task states are as
+follows:
+
+>txt
+    # Task Transitions
+    undone -> cancelled
+    undone -> pending -> done
+    undone -> pending -> cancelled
+    undone -> pending -> hold -> pending -> done
+    undone -> pending -> hold -> pending -> cancelled
+    
+    undone -> ambiguous -> cancelled
+    undone -> ambiguous -> pending -> done
+    undone -> ambiguous -> pending -> cancelled
+    undone -> ambiguous -> pending -> hold -> pending -> done
+    undone -> ambiguous -> pending -> hold -> pending -> cancelled
+    undone -> important -> cancelled
+    undone -> important -> pending -> done
+    undone -> important -> pending -> cancelled
+    undone -> important -> pending -> hold -> pending -> done
+    undone -> important -> pending -> hold -> pending -> cancelled
+    
+    undone -> recurring -> done
+    undone -> recurring -> cancelled
+<
+
+Furthermore, the time properties are populated automatically given the
+following state changes: - When creating task -> populate deadline - When
+leaving undone -> populate started - When entering cancelled or done ->
+populate completed
+
+With this command, I hope that users will waste less time manually messing
+around with the property metadata, and focus more on getting things done.
 
 
 ==============================================================================
