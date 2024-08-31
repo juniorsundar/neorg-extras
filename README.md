@@ -428,7 +428,7 @@ around with the property metadata, and focus more on getting things done.
 - [x] Sorting by dates, tags, etc.
     - [x] Sorting by date and priority (default)
     - [x] Sorting by tags
-- [x] Better UI for property tag population (especially dates and times)
+- [ ] Better UI for property tag population (especially dates and times)
 - [x] Wrapper around task changer to auto-generate property metadata
 - [ ] Alternate views (open to discussion)
 - [ ] Permalinking for Neorg-Roam
