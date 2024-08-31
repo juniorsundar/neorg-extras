@@ -570,7 +570,6 @@ module.public = {
 		end,
 
         --- Get the state of the current task
-
         get_task_state = function(bufnr)
 			bufnr = bufnr or vim.api.nvim_get_current_buf()
             local node_tree = module.private.get_heading_node_tree(bufnr)
@@ -588,6 +587,7 @@ module.public = {
                     return key
                 end
             end
+            return "none"
         end,
 
         --- A wrapper around task toggler
