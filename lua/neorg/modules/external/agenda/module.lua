@@ -220,7 +220,7 @@ module.private = {
 				else
 					years_diff = os.date("*t", curr_time).year - os.date("*t", task_time).year
 					months_diff = os.date("*t", curr_time).month - os.date("*t", task_time).month
-					days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day
+					days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day + 1 -- Difference offset
 				end
 
 				-- Handle negative days
