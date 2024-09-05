@@ -728,6 +728,9 @@ module.public = {
 			else
 				vim.cmd("edit " .. parsed_link.link_file_text)
 			end
+            for _, opt in ipairs(module.public["buff-man"].default_winopts) do
+                vim.api.nvim_set_option_value(opt[1], opt[2], { win = module.public["buff-man"].win })
+            end
 			vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
 		end,
 
@@ -736,17 +739,17 @@ module.public = {
 		---@return integer buffer_number
 		---@return integer window_number
 		create_view_buffer = function(buffer_lines)
-			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
-
-			module.public["buff-man"].win = vim.api.nvim_get_current_win()
-			vim.api.nvim_win_set_buf(module.public["buff-man"].win, module.public["buff-man"].buf)
-			vim.api.nvim_buf_set_lines(module.public["buff-man"].buf, 0, -1, false, buffer_lines)
-
 			-- Populate the default_winopts table with current window options
 			for _, opt in ipairs(module.public["buff-man"].default_winopts) do
 				opt[2] = vim.api.nvim_get_option_value(opt[1], { win = module.public["buff-man"].win })
 			end
 
+			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
+	
+			module.public["buff-man"].win = vim.api.nvim_get_current_win()
+			vim.api.nvim_win_set_buf(module.public["buff-man"].win, module.public["buff-man"].buf)
+			vim.api.nvim_buf_set_lines(module.public["buff-man"].buf, 0, -1, false, buffer_lines)
+	
 			-- Set buffer options for display and interaction
 			vim.api.nvim_set_option_value("filetype", "norg", { buf = module.public["buff-man"].buf })
 			vim.api.nvim_set_option_value("modifiable", false, { buf = module.public["buff-man"].buf })
@@ -758,7 +761,7 @@ module.public = {
 			vim.api.nvim_set_option_value("conceallevel", 2, { win = module.public["buff-man"].win })
 			vim.api.nvim_set_option_value("number", false, { win = module.public["buff-man"].win })
 			vim.api.nvim_set_option_value("relativenumber", false, { win = module.public["buff-man"].win })
-
+	
 			vim.api.nvim_buf_set_keymap(module.public["buff-man"].buf, "n", "<cr>", "", {
 				noremap = true,
 				silent = true,
@@ -775,7 +778,7 @@ module.public = {
 					vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
 				end,
 			})
-
+	
 			return module.public["buff-man"].buf, module.public["buff-man"].win
 		end,
 	},
