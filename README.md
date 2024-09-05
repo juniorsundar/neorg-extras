@@ -73,7 +73,10 @@ This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installat
 return {
     "nvim-neorg/neorg",
     dependencies = {
-        "juniorsundar/neorg-extras",
+        {
+            "juniorsundar/neorg-extras",
+            -- tag = "v0.3.1" -- Always a safe bet to track current latest release
+        },
         "nvim-telescope/telescope.nvim", -- Required for the Neorg-Roam features
         "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
     },
