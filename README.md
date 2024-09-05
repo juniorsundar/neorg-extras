@@ -88,7 +88,7 @@ return {
                 -- MANDATORY and if you're a 50-cent fan
                 ["external.many-mans"] = {
                   config = {
-                    treesitter_fold = true -- Set to 'false' if your package manager is currently NOT lazy.nvim
+                    treesitter_fold = true -- If you don't want @data property ... @end to fold
                   }
                 },
             })
