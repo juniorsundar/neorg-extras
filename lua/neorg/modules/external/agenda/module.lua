@@ -184,7 +184,7 @@ module.private = {
 	format_task_line = function(task, curr_time)
 		local time_str = ""
 		if task.deadline then
-            -- Define the task deadline time
+			-- Define the task deadline time
 			local task_time = os.time({
 				year = tonumber(task.deadline.year) or 2024,
 				month = tonumber(task.deadline.month) or 8,
@@ -212,7 +212,6 @@ module.private = {
 					.. task.deadline.minute
 					.. "]*"
 			else
-
 				-- Calculate differences
 				if task_time > curr_time then
 					years_diff = os.date("*t", task_time).year - os.date("*t", curr_time).year
@@ -243,7 +242,7 @@ module.private = {
 						).day
 				end
 
-                -- Handle negative months
+				-- Handle negative months
 				if months_diff < 0 then
 					years_diff = years_diff - 1
 					months_diff = months_diff + 12
