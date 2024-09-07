@@ -385,7 +385,7 @@ module.public = {
 				focusable = false,
 			}
 			local win = vim.api.nvim_open_win(bufnr, true, opts)
-			vim.api.nvim_win_set_cursor(win, { cursor_pos[1] + 1, 0 })
+			vim.api.nvim_win_set_cursor(win, { cursor_pos[1], 0 })
 
 			-- Check if there is property metadata
 			local value, property_line, heading_line = module.public["meta-man"].is_present_property_metadata(bufnr)
