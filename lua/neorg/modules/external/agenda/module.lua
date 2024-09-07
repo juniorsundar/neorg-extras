@@ -182,101 +182,102 @@ module.private = {
 	--- @param curr_time integer
 	--- @return table
 	format_task_line = function(task, curr_time)
-        local time_str = ""
-        if task.deadline then
-            local task_time = os.time({
-                year = tonumber(task.deadline.year) or 2024,
-                month = tonumber(task.deadline.month) or 8,
-                day = tonumber(task.deadline.day) or 12,
-            })
+		local time_str = ""
+		if task.deadline then
+			local task_time = os.time({
+				year = tonumber(task.deadline.year) or 2024,
+				month = tonumber(task.deadline.month) or 8,
+				day = tonumber(task.deadline.day) or 12,
+			})
 
-            local is_today = (task.deadline.year - tonumber(os.date("%Y")) == 0)
-            and (task.deadline.month - tonumber(os.date("%m")) == 0)
-            and (task.deadline.day - tonumber(os.date("%d")) == 0)
+			local is_today = (task.deadline.year - tonumber(os.date("%Y")) == 0)
+				and (task.deadline.month - tonumber(os.date("%m")) == 0)
+				and (task.deadline.day - tonumber(os.date("%d")) == 0)
 
-            local years_diff = 0
-            local months_diff = 0
-            local days_diff = 0
+			local years_diff = 0
+			local months_diff = 0
+			local days_diff = 0
 
-            if is_today then
-                time_str = "*"
-                .. "{:"
-                .. task.filename
-                .. ":"
-                .. string.gsub(task.task, "%b()", "")
-                .. "}["
-                .. task.deadline.hour
-                .. ":"
-                .. task.deadline.minute
-                .. "]*"
-            else
-                if task_time > curr_time then
-                    years_diff = os.date("*t", task_time).year - os.date("*t", curr_time).year
-                    months_diff = os.date("*t", task_time).month - os.date("*t", curr_time).month
-                    days_diff = os.date("*t", task_time).day - os.date("*t", curr_time).day
-                else
-                    years_diff = os.date("*t", curr_time).year - os.date("*t", task_time).year
-                    months_diff = os.date("*t", curr_time).month - os.date("*t", task_time).month
-                    days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day + 1
-                end
+			if is_today then
+				time_str = "*"
+					.. "{:"
+					.. task.filename
+					.. ":"
+					.. string.gsub(task.task, "%b()", "")
+					.. "}["
+					.. task.deadline.hour
+					.. ":"
+					.. task.deadline.minute
+					.. "]*"
+			else
+				if task_time > curr_time then
+					years_diff = os.date("*t", task_time).year - os.date("*t", curr_time).year
+					months_diff = os.date("*t", task_time).month - os.date("*t", curr_time).month
+					days_diff = os.date("*t", task_time).day - os.date("*t", curr_time).day
+				else
+					years_diff = os.date("*t", curr_time).year - os.date("*t", task_time).year
+					months_diff = os.date("*t", curr_time).month - os.date("*t", task_time).month
+					days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day + 1
+				end
 
-                if days_diff < 0 then
-                    months_diff = months_diff - 1
-                    local previous_month_time = os.time({
-                        year = os.date("*t", task_time).year,
-                        month = os.date("*t", task_time).month - 1,
-                        day = 1,
-                    })
-                    days_diff = days_diff + os.date(
-                        "*t",
-                        os.time({
-                            year = os.date("*t", previous_month_time).year,
-                            month = os.date("*t", previous_month_time).month,
-                            day = 0,
-                        })
-                    ).day
-                end
+				if days_diff < 0 then
+					months_diff = months_diff - 1
+					local previous_month_time = os.time({
+						year = os.date("*t", task_time).year,
+						month = os.date("*t", task_time).month - 1,
+						day = 1,
+					})
+					days_diff = days_diff
+						+ os.date(
+							"*t",
+							os.time({
+								year = os.date("*t", previous_month_time).year,
+								month = os.date("*t", previous_month_time).month,
+								day = 0,
+							})
+						).day
+				end
 
-                if months_diff < 0 then
-                    years_diff = years_diff - 1
-                    months_diff = months_diff + 12
-                end
+				if months_diff < 0 then
+					years_diff = years_diff - 1
+					months_diff = months_diff + 12
+				end
 
-                time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "^(%*+)%s*%b()%s*", "%1 ") .. "}["
-                local time_diff_str = ""
-                if years_diff > 0 then
-                    time_diff_str = time_diff_str .. years_diff .. "y"
-                end
-                if months_diff > 0 then
-                    time_diff_str = time_diff_str .. months_diff .. "m"
-                end
-                if days_diff > 0 then
-                    time_diff_str = time_diff_str .. days_diff .. "d"
-                end
-                local text_padding = 9 - #time_diff_str
+				time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "^(%*+)%s*%b()%s*", "%1 ") .. "}["
+				local time_diff_str = ""
+				if years_diff > 0 then
+					time_diff_str = time_diff_str .. years_diff .. "y"
+				end
+				if months_diff > 0 then
+					time_diff_str = time_diff_str .. months_diff .. "m"
+				end
+				if days_diff > 0 then
+					time_diff_str = time_diff_str .. days_diff .. "d"
+				end
+				local text_padding = 9 - #time_diff_str
 
-                -- Pad the time string to align
-                time_str = time_str .. time_diff_str .. "]*" .. string.rep(" ", text_padding)
-            end
-        else
-            time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
-        end
+				-- Pad the time string to align
+				time_str = time_str .. time_diff_str .. "]*" .. string.rep(" ", text_padding)
+			end
+		else
+			time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "%b()", "") .. "}[unscheduled]*"
+		end
 
-        local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
+		local task_state_str = "\\[" .. task.state .. "\\] " .. (task.task):match("%)%s*(.+)")
 
-        local priority_str = "  "
-        if task.priority ~= "" and task.priority ~= nil then
-            priority_str = priority_str .. "*" .. task.priority .. "*"
-        else
-            priority_str = priority_str .. " "
-        end
-        priority_str = priority_str .. "  "
+		local priority_str = "  "
+		if task.priority ~= "" and task.priority ~= nil then
+			priority_str = priority_str .. "*" .. task.priority .. "*"
+		else
+			priority_str = priority_str .. " "
+		end
+		priority_str = priority_str .. "  "
 
-        local line_str = "   " .. time_str
-        line_str = line_str .. " ::" .. priority_str
-        line_str = line_str .. ":: " .. task_state_str
+		local line_str = "   " .. time_str
+		line_str = line_str .. " ::" .. priority_str
+		line_str = line_str .. ":: " .. task_state_str
 
-        return line_str
+		return line_str
 	end,
 
 	--- Adds the header and trailing line breaks to encapsulate the task lines
