@@ -184,12 +184,14 @@ module.private = {
 	format_task_line = function(task, curr_time)
 		local time_str = ""
 		if task.deadline then
+            -- Define the task deadline time
 			local task_time = os.time({
 				year = tonumber(task.deadline.year) or 2024,
 				month = tonumber(task.deadline.month) or 8,
 				day = tonumber(task.deadline.day) or 12,
 			})
 
+			-- Flag to check if the task deadline is today
 			local is_today = (task.deadline.year - tonumber(os.date("%Y")) == 0)
 				and (task.deadline.month - tonumber(os.date("%m")) == 0)
 				and (task.deadline.day - tonumber(os.date("%d")) == 0)
@@ -210,6 +212,8 @@ module.private = {
 					.. task.deadline.minute
 					.. "]*"
 			else
+
+				-- Calculate differences
 				if task_time > curr_time then
 					years_diff = os.date("*t", task_time).year - os.date("*t", curr_time).year
 					months_diff = os.date("*t", task_time).month - os.date("*t", curr_time).month
@@ -217,9 +221,10 @@ module.private = {
 				else
 					years_diff = os.date("*t", curr_time).year - os.date("*t", task_time).year
 					months_diff = os.date("*t", curr_time).month - os.date("*t", task_time).month
-					days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day + 1
+					days_diff = os.date("*t", curr_time).day - os.date("*t", task_time).day + 1 -- Difference offset
 				end
 
+				-- Handle negative days
 				if days_diff < 0 then
 					months_diff = months_diff - 1
 					local previous_month_time = os.time({
@@ -238,11 +243,13 @@ module.private = {
 						).day
 				end
 
+                -- Handle negative months
 				if months_diff < 0 then
 					years_diff = years_diff - 1
 					months_diff = months_diff + 12
 				end
 
+				-- Create the time difference string
 				time_str = "*{:" .. task.filename .. ":" .. string.gsub(task.task, "^(%*+)%s*%b()%s*", "%1 ") .. "}["
 				local time_diff_str = ""
 				if years_diff > 0 then
