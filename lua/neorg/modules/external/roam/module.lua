@@ -56,7 +56,7 @@ module.private = {
 
     get_fuzzy_finder_modules = function()
         if module.config.public.fuzzy_finder == "Telescope" then
-            local success,  _ = pcall(require, "telescope")
+            local success, _ = pcall(require, "telescope")
             if not success then
                 return false
             end
@@ -159,8 +159,6 @@ module.public = {
 
         local current_workspace = module.required["core.dirman"].get_current_workspace()
         local base_directory = current_workspace[2]
-        -- vim.notify(vim.inspect(title_path_pairs), vim.log.levels.INFO)
-
 
         if module.config.public.fuzzy_finder == "Telescope" then
             -- Find all .norg files in the workspace
@@ -206,7 +204,8 @@ module.public = {
                             local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
                             -- Insert at the cursor location
                             module.private.telescope_modules.actions.close(prompt_bufnr)
-                            vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. entry.display .. "]" }, "", false, true)
+                            vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. entry.display .. "]" }, "", false,
+                                true)
                         end)
 
                         -- Map <C-n> to create a new node with the given title in the default note vault
@@ -229,7 +228,8 @@ module.public = {
                             vim.fn.mkdir(vault_dir, "p")
 
                             -- Create and open a new Neorg file with the generated title token
-                            vim.api.nvim_command("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+                            vim.api.nvim_command("edit " ..
+                            vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
                             vim.cmd([[Neorg inject-metadata]])
 
                             -- Update the title in the newly created buffer
@@ -248,7 +248,6 @@ module.public = {
                 })
                 :find()
         elseif module.config.public.fuzzy_finder == "Fzf" then
-
             local titles = {}
             local title_path_dict = {}
 
@@ -275,7 +274,6 @@ module.public = {
                 return self
             end
 
-
             function FzfPreview:parse_entry(entry_str)
                 return {
                     path = title_path_dict[entry_str] == nil and entry_str or title_path_dict[entry_str],
@@ -289,7 +287,7 @@ module.public = {
                 prompt = "Find Neorg Node> ",
                 actions = {
                     ["default"] = {
-                        function (selected, _)
+                        function(selected, _)
                             vim.cmd("new " .. title_path_dict[selected[1]])
                         end
                     },
@@ -298,7 +296,7 @@ module.public = {
                             local current_file_path = title_path_dict[selected[1]]
                             local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
                             local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
-                            -- Insert at the cursor location
+                            -- Insert after the cursor location
                             vim.cmd("q")
                             vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. selected[1] .. "]" }, "", true, true)
                         end
@@ -306,7 +304,8 @@ module.public = {
                     ["ctrl-n"] = {
                         function(selected, opt)
                             -- Input query is in opt.__call_opts.query
-                            vim.notify(vim.inspect(selected) .. " " .. vim.inspect(opt.__call_opts.query), vim.log.levels.WARN)
+                            vim.notify(vim.inspect(selected) .. " " .. vim.inspect(opt.__call_opts.query),
+                                vim.log.levels.WARN)
                             local prompt = opt.__call_opts.query
                             local title_token = prompt:gsub("%W", ""):lower()
                             local n = #title_token
