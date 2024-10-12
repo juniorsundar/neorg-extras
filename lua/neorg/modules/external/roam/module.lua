@@ -469,16 +469,16 @@ module.public = {
             function BlockPreview:parse_entry(entry_str)
                 return {
                     path = text_string_matches_dict[entry_str] == nil and "/tmp/" or
-                    text_string_matches_dict[entry_str]["file"],
+                        text_string_matches_dict[entry_str]["file"],
                     line = text_string_matches_dict[entry_str] == nil and 1 or
-                    text_string_matches_dict[entry_str]["line"],
+                        text_string_matches_dict[entry_str]["line"],
                     col = 1,
                 }
             end
 
             module.private.fzf_modules.fzf_lua.fzf_exec(text_string, {
                 previewer = BlockPreview,
-                prompt = "Find Neorg Node> ",
+                prompt = "Find Neorg Block> ",
                 actions = {
                     ["default"] = {
                         function(selected, _)
@@ -492,7 +492,8 @@ module.public = {
                             local base_path = base_directory:gsub("([^%w])", "%%%1")
                             local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
 
-                            local heading_prefix = string.match(text_string_matches_dict[selected[1]]["heading_text"], "^(%** )")
+                            local heading_prefix = string.match(text_string_matches_dict[selected[1]]["heading_text"],
+                                "^(%** )")
                             local heading_text = module.private.get_heading_text(filename,
                                 tonumber(text_string_matches_dict[selected[1]]["line"]))
                             if not heading_text then
@@ -504,7 +505,9 @@ module.public = {
 
                             vim.cmd("q")
                             vim.api.nvim_put(
-                            { "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" }, "", true,
+                                { "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
+                                "",
+                                true,
                                 true)
                         end
                     },
@@ -524,51 +527,83 @@ module.public = {
 
         local workspaces = module.required["core.dirman"].get_workspaces()
         local workspace_names = {}
-
         -- Collect the names of all workspaces
         for name in pairs(workspaces) do
             table.insert(workspace_names, name)
         end
 
-        local opts = {}
-        opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+        if module.config.public.fuzzy_finder == "Telescope" then
 
-        -- Set up Telescope picker to display and select Neorg workspaces
-        module.private.telescope_modules.pickers
-            .new(opts, {
-                prompt_title = "Select Neorg Workspace",
-                finder = module.private.telescope_modules.finders.new_table({
-                    results = workspace_names,
-                    entry_maker = function(entry)
-                        local filename = workspaces[entry] .. "/index.norg"
+            local opts = {}
+            opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-                        return {
-                            value = filename,
-                            display = entry,
-                            ordinal = entry,
-                            filename = filename,
-                        }
+            -- Set up Telescope picker to display and select Neorg workspaces
+            module.private.telescope_modules.pickers
+                .new(opts, {
+                    prompt_title = "Select Neorg Workspace",
+                    finder = module.private.telescope_modules.finders.new_table({
+                        results = workspace_names,
+                        entry_maker = function(entry)
+                            local filename = workspaces[entry] .. "/index.norg"
+
+                            return {
+                                value = filename,
+                                display = entry,
+                                ordinal = entry,
+                                filename = filename,
+                            }
+                        end,
+                    }),
+                    previewer = module.private.telescope_modules.conf.file_previewer(opts),
+                    sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                    attach_mappings = function(prompt_bufnr, map)
+                        -- Map <CR> to switch to the selected workspace
+                        map("i", "<CR>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            module.required["core.dirman"].set_workspace(tostring(entry.display))
+                        end)
+                        map("n", "<CR>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            module.required["core.dirman"].set_workspace(tostring(entry.display))
+                        end)
+
+                        return true
                     end,
-                }),
-                previewer = module.private.telescope_modules.conf.file_previewer(opts),
-                sorter = module.private.telescope_modules.conf.file_sorter(opts),
-                attach_mappings = function(prompt_bufnr, map)
-                    -- Map <CR> to switch to the selected workspace
-                    map("i", "<CR>", function()
-                        local entry = module.private.telescope_modules.state.get_selected_entry()
-                        module.private.telescope_modules.actions.close(prompt_bufnr)
-                        module.required["core.dirman"].set_workspace(tostring(entry.display))
-                    end)
-                    map("n", "<CR>", function()
-                        local entry = module.private.telescope_modules.state.get_selected_entry()
-                        module.private.telescope_modules.actions.close(prompt_bufnr)
-                        module.required["core.dirman"].set_workspace(tostring(entry.display))
-                    end)
+                })
+                :find()
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local WorkspacePreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
 
-                    return true
-                end,
+            function WorkspacePreview:new(o, opts, fzf_win)
+                WorkspacePreview.super.new(self, o, opts, fzf_win)
+                setmetatable(self, WorkspacePreview)
+                return self
+            end
+
+            function WorkspacePreview:parse_entry(entry_str)
+                return {
+                    path = workspaces[entry_str] == nil and "/tmp/" or
+                        workspaces[entry_str] .. "/index.norg",
+                    line = 1,
+                    col = 1,
+                }
+            end
+
+            module.private.fzf_modules.fzf_lua.fzf_exec(workspace_names, {
+                previewer = WorkspacePreview,
+                prompt = "Find Neorg Block> ",
+                actions = {
+                    ["default"] = {
+                        function(selected, _)
+                            vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
+                            vim.cmd(":1")
+                        end
+                    },
+                }
             })
-            :find()
+        end
     end,
 
     -- Function to find and display backlinks to the current Neorg file.
