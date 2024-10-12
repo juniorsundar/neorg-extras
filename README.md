@@ -12,7 +12,6 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 </div>
 
 <!--toc:start-->
-- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -88,17 +87,18 @@ return {
     config = function()
         require('neorg').setup({
             load = {
-                ["external.agenda"] = {}, -- OPTIONAL if you don't want the agenda features
-                ["external.roam"] = {
-                    config = {
-                        fuzzy_finder = "Telescope" -- OR "Fzf"
-                    }
-                }, -- OPTIONAL if you don't want the roam features
-                -- MANDATORY and if you're a 50-cent fan
+                -- MANDATORY
                 ["external.many-mans"] = {
                   config = {
                     treesitter_fold = true -- If you don't want @data property ... @end to fold
                   }
+                },
+                -- OPTIONAL
+                ["external.agenda"] = {},
+                ["external.roam"] = {
+                    config = {
+                        fuzzy_finder = "Telescope" -- OR "Fzf" ... Defaults to "Telescope"
+                    }
                 },
             })
 
