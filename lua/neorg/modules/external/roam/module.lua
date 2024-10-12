@@ -381,7 +381,7 @@ module.public = {
             -- Set up Telescope picker to display and select Neorg blocks
             module.private.telescope_modules.pickers
                 .new(opts, {
-                    prompt_title = "Find Blocks",
+                    prompt_title = "Find Block",
                     finder = module.private.telescope_modules.finders.new_table({
                         results = matches,
                         entry_maker = function(entry)
@@ -533,14 +533,13 @@ module.public = {
         end
 
         if module.config.public.fuzzy_finder == "Telescope" then
-
             local opts = {}
             opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
             -- Set up Telescope picker to display and select Neorg workspaces
             module.private.telescope_modules.pickers
                 .new(opts, {
-                    prompt_title = "Select Neorg Workspace",
+                    prompt_title = "Find Neorg Workspace",
                     finder = module.private.telescope_modules.finders.new_table({
                         results = workspace_names,
                         entry_maker = function(entry)
@@ -593,7 +592,7 @@ module.public = {
 
             module.private.fzf_modules.fzf_lua.fzf_exec(workspace_names, {
                 previewer = WorkspacePreview,
-                prompt = "Find Neorg Block> ",
+                prompt = "Find Neorg Workspace> ",
                 actions = {
                     ["default"] = {
                         function(selected, _)
@@ -630,63 +629,113 @@ module.public = {
 
         -- Run ripgrep to find backlinks in other Neorg files
         local rg_command = "rg --fixed-strings "
-            .. "'"
-            .. search_path
-            .. "'"
-            .. " "
-            .. "-g '*.norg' --with-filename --line-number "
-            .. base_directory
+        .. "'"
+        .. search_path
+        .. "'"
+        .. " "
+        .. "-g '*.norg' --with-filename --line-number "
+        .. base_directory
         local rg_results = vim.fn.system(rg_command)
 
         -- Process the ripgrep results to identify backlinks
-        local matches = {}
         local self_title =
-            module.required["external.many-mans"]["meta-man"].extract_file_metadata(current_file_path)["title"]
-        for line in rg_results:gmatch("([^\n]+)") do
-            local file, lineno = line:match("^(.-):(%d+):")
-            local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
-            if metadata == nil then
-                table.insert(matches, { file, lineno, "Untitled" })
-            elseif metadata["title"] ~= self_title then
-                table.insert(matches, { file, lineno, metadata["title"] })
-            else
-                table.insert(matches, { file, lineno, "Untitled" })
+        module.required["external.many-mans"]["meta-man"].extract_file_metadata(current_file_path)["title"]
+
+        if module.config.public.fuzzy_finder == "Telescope" then
+            local matches = {}
+            for line in rg_results:gmatch("([^\n]+)") do
+                local file, lineno = line:match("^(.-):(%d+):")
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                if metadata == nil then
+                    table.insert(matches, { file, lineno, "Untitled" })
+                elseif metadata["title"] ~= self_title then
+                    table.insert(matches, { file, lineno, metadata["title"] })
+                else
+                    table.insert(matches, { file, lineno, "Untitled" })
+                end
             end
-        end
-        vim.notify(vim.inspect(matches))
 
-        local opts = {}
-        opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+            local opts = {}
+            opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-        -- Set up Telescope picker to display and select backlinks
-        module.private.telescope_modules.pickers
-            .new(opts, {
-                prompt_title = "Backlinks",
-                finder = module.private.telescope_modules.finders.new_table({
-                    results = matches,
-                    entry_maker = function(entry)
-                        local filename = entry[1]
-                        local line_number = tonumber(entry[2])
-                        local title = entry[3]
+            -- Set up Telescope picker to display and select backlinks
+            module.private.telescope_modules.pickers
+                .new(opts, {
+                    prompt_title = "Backlinks",
+                    finder = module.private.telescope_modules.finders.new_table({
+                        results = matches,
+                        entry_maker = function(entry)
+                            local filename = entry[1]
+                            local line_number = tonumber(entry[2])
+                            local title = entry[3]
 
-                        return {
-                            value = filename,
-                            display = title .. "  @" .. line_number,
-                            ordinal = title,
-                            filename = filename,
-                            lnum = line_number,
-                        }
-                    end,
-                }),
-                previewer = module.private.telescope_modules.conf.grep_previewer(opts),
-                sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                            return {
+                                value = filename,
+                                display = title .. "  @" .. line_number,
+                                ordinal = title,
+                                filename = filename,
+                                lnum = line_number,
+                            }
+                        end,
+                    }),
+                    previewer = module.private.telescope_modules.conf.grep_previewer(opts),
+                    sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                })
+                :find()
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local backlink_texts = {}
+            local backlink_text_matches_dict = {}
+            for line in rg_results:gmatch("([^\n]+)") do
+                local file, lineno = line:match("^(.-):(%d+):")
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                if metadata == nil then
+                    table.insert(backlink_texts, "Untitled @" .. lineno)
+                    backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
+                elseif metadata["title"] ~= self_title then
+                    table.insert(backlink_texts, metadata["title"] .. " @" .. lineno)
+                    backlink_text_matches_dict[metadata["title"] .. " @" .. lineno] = { ["file"] = file, ["line"] =
+                        lineno }
+                else
+                    table.insert(backlink_texts, "Untitled @" .. lineno)
+                    backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
+                end
+            end
+
+            local BacklinksPreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
+
+            function BacklinksPreview:new(o, opts, fzf_win)
+                BacklinksPreview.super.new(self, o, opts, fzf_win)
+                setmetatable(self, BacklinksPreview)
+                return self
+            end
+
+            function BacklinksPreview:parse_entry(entry_str)
+                return {
+                    path = backlink_text_matches_dict[entry_str] == nil and "/tmp/" or
+                        backlink_text_matches_dict[entry_str]['file'],
+                    line = backlink_text_matches_dict[entry_str] == nil and 1 or
+                        backlink_text_matches_dict[entry_str]['line'],
+                    col = 1,
+                }
+            end
+
+            module.private.fzf_modules.fzf_lua.fzf_exec(backlink_texts, {
+                previewer = BacklinksPreview,
+                prompt = "Backlinks> ",
+                actions = {
+                    ["default"] = {
+                        function(selected, _)
+                            vim.cmd("new " .. backlink_text_matches_dict[selected[1]]['file'])
+                            vim.cmd(":" .. backlink_text_matches_dict[selected[1]]['line'])
+                        end
+                    },
+                }
             })
-            :find()
+        end
     end,
 }
 
 module.on_event = function(event)
-    -- vim.notify(vim.inspect(event))
     if event.split_type[2] == "external.roam.node" then
         module.public.node()
     elseif event.split_type[2] == "external.roam.block" then
