@@ -75,7 +75,7 @@ return {
     dependencies = {
         {
             "juniorsundar/neorg-extras",
-            -- tag = "v0.3.1" -- Always a safe bet to track current latest release
+            -- tag = "*" -- Always a safe bet to track current latest release
         },
         -- FOR Neorg-Roam Features
         --- OPTION 1: Telescope
