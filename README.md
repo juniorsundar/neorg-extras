@@ -12,6 +12,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 </div>
 
 <!--toc:start-->
+- [NeorgExtras](#neorgextras)
 - [System Prerequisites](#system-prerequisites)
 - [Installation](#installation)
   - [`lazy.nvim`](#lazynvim)
@@ -77,14 +78,22 @@ return {
             "juniorsundar/neorg-extras",
             -- tag = "v0.3.1" -- Always a safe bet to track current latest release
         },
-        "nvim-telescope/telescope.nvim", -- Required for the Neorg-Roam features
+        -- FOR Neorg-Roam Features
+        --- OPTION 1: Telescope
+        "nvim-telescope/telescope.nvim",
         "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
+        -- OR OPTION 2: Fzf-Lua
+        "ibhagwan/fzf-lua"
     },
     config = function()
         require('neorg').setup({
             load = {
                 ["external.agenda"] = {}, -- OPTIONAL if you don't want the agenda features
-                ["external.roam"] = {}, -- OPTIONAL if you don't want the roam features
+                ["external.roam"] = {
+                    config = {
+                        fuzzy_finder = "Telescope" -- OR "Fzf"
+                    }
+                }, -- OPTIONAL if you don't want the roam features
                 -- MANDATORY and if you're a 50-cent fan
                 ["external.many-mans"] = {
                   config = {
@@ -180,10 +189,10 @@ unique filename into a `vault` folder in the workspace root.
 
 ### Default Mappings
 
-| Mappings | Action                                                                                                                         |
-|----------|--------------------------------------------------------------------------------------------------------------------------------|
-| `<CR>`     | Open to selected node.                                                                                                          |
-| `<C-i>`    | Inserts hovering node into cursor location. Node's title will be concealing alias. Eg: `{:$/workspace/path/tonode:}[Title]`.     |
+| Mappings | Action |
+|----------|-------------------------------------------------------------------------------------------------------------------------------|
+| `<CR>` | Open to selected node.|
+| `<C-i>`| Inserts hovering node into cursor location. Node's title will be concealing alias. Eg: `{:$/workspace/path/tonode:}[Title]`.|
 | `<C-n>` | Creates new node with title of text in search bar and unique node name. |
 
 ## Blocks
@@ -216,9 +225,9 @@ You want to insert the block into your cursor location as a link.
 
 ### Default Mappings
 
-| Mappings | Action                                                                        |
-|----------|-------------------------------------------------------------------------------|
-| `<CR>`   | Open to selected block.                                                                |
+| Mappings | Action                                       |
+|----------|----------------------------------------------|
+| `<CR>`   | Open to selected block.|
 | `<C-i>`  | Inserts hovering block into cursor location. |
 
 ## Backlinks
