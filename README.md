@@ -99,6 +99,7 @@ return {
                 ["external.roam"] = {
                     config = {
                         fuzzy_finder = "Telescope" -- OR "Fzf" ... Defaults to "Telescope"
+                        fuzzy_backlinks = false -- Set to "true" for backlinks in fuzzy finder instead of buffer
                     }
                 },
             })
