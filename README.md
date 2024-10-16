@@ -89,15 +89,17 @@ return {
             load = {
                 -- MANDATORY
                 ["external.many-mans"] = {
-                  config = {
-                    treesitter_fold = true -- If you don't want @data property ... @end to fold
-                  }
+                    config = {
+                        metadata_fold = true -- If want @data property ... @end to fold
+                        code_fold = true -- If want @code ... @end to fold
+                    }
                 },
                 -- OPTIONAL
                 ["external.agenda"] = {},
                 ["external.roam"] = {
                     config = {
                         fuzzy_finder = "Telescope" -- OR "Fzf" ... Defaults to "Telescope"
+                        fuzzy_backlinks = false -- Set to "true" for backlinks in fuzzy finder instead of buffer
                     }
                 },
             })
@@ -234,16 +236,18 @@ You want to insert the block into your cursor location as a link.
 
 ### Rationale
 
-Since we are swearing off the file-tree, we need a way to conveniently navigate between nodes. The backlinks offer us an insight into the ways we can get to the current node.
+Since we are swearing off the file-tree, we need a way to conveniently navigate
+between nodes. The backlinks offer us an insight into the ways we can get to
+the current node.
 
-> [!IMPORTANT]
-> I believe that using Telescope to list out backlinks and using that as a
-> navigation methodology is flawed because you cannot have it open when working
-> on a current node. Backlinks should be visible at all times to be truly
-> effective, and if I have to press a keymap to open it, it wastes valuable
-> time.
-> 
-> TODO change this into a read-only buffer that can be toggled.
+There are two options to view backlinks. Depending on whether to the
+configuration `fuzzy_backlinks` is set to `false` or `true`:
+- `false` - (default) Opens the backlinks as a vertical-split buffer.
+- `true` - Opens the backlinks within the selected fuzzy-finder.
+
+As a buffer, the entries are **folded**. You can unfold then to reveal a
+preview from where the backlinks are extracted. This isn't necessary with the
+fuzzy-finder as it can be configured to show an automatic preview.
 
 ### Use-Case
 
