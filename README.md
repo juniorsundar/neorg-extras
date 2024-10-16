@@ -89,9 +89,10 @@ return {
             load = {
                 -- MANDATORY
                 ["external.many-mans"] = {
-                  config = {
-                    treesitter_fold = true -- If you don't want @data property ... @end to fold
-                  }
+                    config = {
+                        metadata_fold = true -- If want @data property ... @end to fold
+                        code_fold = true -- If want @code ... @end to fold
+                    }
                 },
                 -- OPTIONAL
                 ["external.agenda"] = {},
