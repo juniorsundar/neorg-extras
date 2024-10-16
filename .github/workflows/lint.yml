@@ -36,6 +36,9 @@ jobs:
       - name: Run formatting
         run: stylua -v --verify .
 
+      - name: Pull latest changes before committing
+        run: git pull origin main --rebase
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: autoformat with stylua"
