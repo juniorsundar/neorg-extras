@@ -743,6 +743,7 @@ module.public = {
 				vim.api.nvim_set_option_value(opt[1], opt[2], { win = module.public["buff-man"].win })
 			end
 			vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
+            module.public["buff-man"].win = nil
 		end,
 
 		open_to_target_backlink = function()
@@ -810,6 +811,7 @@ module.public = {
 						vim.api.nvim_set_option_value(opt[1], opt[2], { win = module.public["buff-man"].win })
 					end
 					vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
+					module.public["buff-man"].win = nil
 				end,
 			})
 
