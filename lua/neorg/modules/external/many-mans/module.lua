@@ -697,7 +697,7 @@ module.public = {
 					module.public["meta-man"].update_property_metadata(updated_prop_table)
 				end)
 			end
-            vim.cmd([[write!]])
+			vim.cmd([[write!]])
 		end,
 	},
 
