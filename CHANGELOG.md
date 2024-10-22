@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1](https://github.com/juniorsundar/neorg-extras/compare/v0.5.0...v0.5.1) (2024-10-22)
+
+
+### Bug Fixes
+
+* **buff-man:** Clean agenda view window upon quit ([2bc8edf](https://github.com/juniorsundar/neorg-extras/commit/2bc8edf33c759279515352a0fd1475a194c784fa))
+* **cycle_task:** Save on task cycle to account for buffer change ([b9132d3](https://github.com/juniorsundar/neorg-extras/commit/b9132d3f9c8d0fb65c8bb609be34634339efedab))
+
 ## [0.5.0](https://github.com/juniorsundar/neorg-extras/compare/v0.4.0...v0.5.0) (2024-10-16)
 
 
