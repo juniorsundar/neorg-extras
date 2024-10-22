@@ -120,8 +120,8 @@ to create a pull request.
 
 # Neorg-Roam
 
-At the moment, this feature relies heavily on the [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim) plugin.
-I have plans to liberate this plugin from the need of using Telescope, but that
+At the moment, this feature relies heavily on the a 3rd-Party Fuzzy Finder ([Telescope](https://github.com/nvim-telescope/telescope.nvim) or [Fzf-Lua](https://github.com/ibhagwan/fzf-lua)).
+I have plans to liberate this plugin from this need, but that
 is something way down in the future after I have implemented the required basic
 features. So, for the moment, users of this plugin will have to bear with this
 dependency.
@@ -130,11 +130,6 @@ Also note that there are a lot of similarities in this plugin with [`nvim-neorg/
 It implements these features much better than I do, and more cleanly that I do.
 If you are comfortable using that, then you can install it along side this
 plugin and simply skip the Neorg-Roam feature-set.
-
-> [!NOTE]
->
-> TODO In the future. I will implement a flag that will turn this off (maybe...
-> IDK).
 
 ## Set Workspace
 
@@ -448,7 +443,7 @@ around with the property metadata, and focus more on getting things done.
 - [x] Wrapper around task changer to auto-generate property metadata
 - [ ] Alternate views (open to discussion)
 - [ ] Permalinking for Neorg-Roam
-- [ ] Better UI for Backlinks (Telescope/Fuzzy finder is too distracting)
+- [x] Better UI for Backlinks (Telescope/Fuzzy finder is too distracting)
 
 ## Secondary
 
