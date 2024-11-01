@@ -692,6 +692,9 @@ module.public = {
 					for row in io.lines(file) do
 						curr_row = curr_row + 1
 						if curr_row >= startrow and curr_row <= endrow then
+                            -- Escape out any lines that start with @
+                            -- because it can interfere with the @code ... @end block
+                            row = row:gsub("^@", "\\@")
 							table.insert(buffer_lines, row)
 						end
 					end
