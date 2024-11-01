@@ -831,6 +831,9 @@ module.public = {
 			end
 		end
 	end,
+
+	-- Function to create a capture buffer and append text to today's journal entry
+	capture = function() end,
 }
 
 module.on_event = function(event)

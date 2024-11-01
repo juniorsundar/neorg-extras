@@ -748,6 +748,10 @@ module.public = {
 			module.public["buff-man"].win = nil
 		end,
 
+		--- Navigates to a specific backlink in a Neorg file and opens it at the specified location.
+		--- Parses the current Neorg link under the cursor, checks if it points to a specific line
+		--- number or file. If line number specified, opens the file at that line; otherwise, opens the file normally.
+		--- Additionally, restores buffer window options to default and cleans up the buffer state.
 		open_to_target_backlink = function()
 			-- Wrapping around the esupports.hop module to get the link
 			local parsed_link = module.required["core.esupports.hop"].parse_link(
@@ -848,6 +852,63 @@ module.public = {
 			vim.api.nvim_set_option_value("relativenumber", false, { win = module.public["buff-man"].win })
 
 			vim.cmd("set foldlevel=1")
+			-- Set keymaps for the buffer
+			vim.api.nvim_buf_set_keymap(module.public["buff-man"].buf, "n", "<cr>", "", {
+				noremap = true,
+				silent = true,
+				callback = module.public["buff-man"].open_to_target_backlink,
+			})
+			vim.api.nvim_buf_set_keymap(module.public["buff-man"].buf, "n", "q", "", {
+				noremap = true,
+				silent = true,
+				callback = function()
+					-- Restore the original window options when closing
+					if vim.api.nvim_win_is_valid(module.public["buff-man"].win) then
+						for _, opt in ipairs(module.public["buff-man"].default_winopts) do
+							vim.api.nvim_set_option_value(opt[1], opt[2], { win = module.public["buff-man"].win })
+						end
+					end
+					vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
+					module.public["buff-man"].win = nil
+				end,
+			})
+
+			return module.public["buff-man"].buf, module.public["buff-man"].win
+		end,
+
+		--- Standard buffer for capture
+		---@param buffer_lines string[]
+		---@return integer buffer_number
+		---@return integer window_number
+		create_capture_buffer = function(buffer_lines)
+			-- Populate the default_winopts table with current window options
+			for _, opt in ipairs(module.public["buff-man"].default_winopts) do
+				opt[2] = vim.api.nvim_get_option_value(opt[1], { win = module.public["buff-man"].win })
+			end
+
+			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
+
+			vim.api.nvim_command("vsplit")
+
+			-- Get the new window ID and set the buffer in the new split
+			module.public["buff-man"].win = vim.api.nvim_get_current_win()
+			vim.api.nvim_win_set_buf(module.public["buff-man"].win, module.public["buff-man"].buf)
+
+			vim.api.nvim_buf_set_lines(module.public["buff-man"].buf, 0, -1, false, buffer_lines)
+
+			-- Set buffer options for display and interaction
+			vim.api.nvim_set_option_value("filetype", "norg", { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("modifiable", false, { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("swapfile", false, { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("buftype", "nofile", { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("bufhidden", "delete", { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("readonly", true, { buf = module.public["buff-man"].buf })
+			vim.api.nvim_set_option_value("wrap", false, { win = module.public["buff-man"].win })
+			vim.api.nvim_set_option_value("conceallevel", 2, { win = module.public["buff-man"].win })
+			vim.api.nvim_set_option_value("number", false, { win = module.public["buff-man"].win })
+			vim.api.nvim_set_option_value("relativenumber", false, { win = module.public["buff-man"].win })
+
+			vim.api.nvim_command("set foldlevel=1")
 			-- Set keymaps for the buffer
 			vim.api.nvim_buf_set_keymap(module.public["buff-man"].buf, "n", "<cr>", "", {
 				noremap = true,
