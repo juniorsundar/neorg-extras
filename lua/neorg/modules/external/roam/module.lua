@@ -41,6 +41,18 @@ module.load = function()
 					args = 0,
 					name = "external.roam.select_workspace",
 				},
+				["capture"] = {
+					args = 1,
+					complete = {
+						{
+							"todo",
+							"note",
+							"meeting",
+							"selection",
+						},
+					},
+					name = "external.roam.capture",
+				},
 			},
 		},
 	})
@@ -52,10 +64,87 @@ module.events.subscribed = {
 		["external.roam.block"] = true,
 		["external.roam.backlinks"] = true,
 		["external.roam.select_workspace"] = true,
+		["external.roam.capture"] = true,
 	},
 }
 
 module.private = {
+
+	default_capture_templates = {
+		["todo"] = [[]],
+		["note"] = [[]],
+		["meeting"] = [[
+* Meeting name
+
+** Attendees
+
+** Goal
+
+** Agenda
+
+** Minutes
+        ]],
+		["selection"] = [[]],
+	},
+
+	generate_default_capture_templates = function()
+		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+		local dir_path = current_workspace .. "/capture-templates"
+
+		local ok, _, code = os.rename(dir_path, dir_path)
+		if not ok and code == 2 then
+			vim.fn.mkdir(current_workspace .. "/capture-templates", "p")
+		end
+
+		for key, value in pairs(module.private.default_capture_templates) do
+			local file_path = dir_path .. "/" .. key .. ".norg"
+
+			local file = io.open(file_path, "r")
+			if not file then
+				vim.cmd("edit " .. file_path)
+				vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(value, "\n"))
+				vim.cmd("w")
+				vim.cmd("bd")
+			else
+				file:close()
+			end
+		end
+	end,
+
+	verify_default_capture_templates = function()
+		local function key_exists(key, table_of_strings)
+			for _, value in ipairs(table_of_strings) do
+				if value == key then
+					return true
+				end
+			end
+			return false
+		end
+
+		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+		local dir_path = current_workspace .. "/capture-templates"
+
+		local ok, _, code = os.rename(dir_path, dir_path)
+		if not ok and code == 2 then
+			return false
+		end
+
+		local template_files = {}
+		for name, type in vim.fs.dir(dir_path) do
+			if type == "file" and name:match("%.norg$") then
+				local base_name = name:gsub("%.norg$", "")
+				table.insert(template_files, base_name)
+			end
+		end
+
+		for key, _ in pairs(module.private.default_capture_templates) do
+			if not key_exists(key, template_files) then
+				return false
+			end
+		end
+
+		return true
+	end,
 
 	get_fuzzy_finder_modules = function()
 		if module.config.public.fuzzy_finder == "Telescope" then
@@ -177,28 +266,28 @@ module.public = {
 			return nil
 		end
 
-		local current_workspace = module.required["core.dirman"].get_current_workspace()
-		local base_directory = current_workspace[2]
+        local current_workspace = module.required["core.dirman"].get_current_workspace()
+        local base_directory = current_workspace[2]
 
 		if module.config.public.fuzzy_finder == "Telescope" then
 			-- Find all .norg files in the workspace
 			local norg_files_output =
 				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
-			-- Extract titles and paths from the Neorg files
-			local title_path_pairs = {}
-			for _, line in pairs(norg_files_output) do
-				local full_path = base_directory .. "/" .. line
-				local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(full_path)
-				if metadata ~= nil then
-					table.insert(title_path_pairs, { metadata["title"], full_path })
-				else
-					table.insert(title_path_pairs, { "Untitled", full_path })
-				end
-			end
+            -- Extract titles and paths from the Neorg files
+            local title_path_pairs = {}
+            for _, line in pairs(norg_files_output) do
+                local full_path = base_directory .. "/" .. line
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(full_path)
+                if metadata ~= nil then
+                    table.insert(title_path_pairs, { metadata["title"], full_path })
+                else
+                    table.insert(title_path_pairs, { "Untitled", full_path })
+                end
+            end
 
-			local opts = {}
-			opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+            local opts = {}
+            opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
             -- Set up Telescope picker to display and select Neorg files
             module.private.telescope_modules.pickers
@@ -245,52 +334,54 @@ module.public = {
                             (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
                             vim.fn.mkdir(vault_dir, "p")
 
-							-- Create and open a new Neorg file with the generated title token
-							vim.cmd("new " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
-							vim.cmd([[Neorg inject-metadata]])
+                            -- Create and open a new Neorg file with the generated title token
+                            vim.api.nvim_command(
+                                "edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg"
+                            )
+                            vim.cmd([[Neorg inject-metadata]])
 
-							-- Update the title in the newly created buffer
-							local buf = vim.api.nvim_get_current_buf()
-							local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-							for i, line in ipairs(lines) do
-								if line:match("^title:") then
-									lines[i] = "title: " .. prompt
-									break
-								end
-							end
-							vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-						end)
-						return true
-					end,
-				})
-				:find()
-		elseif module.config.public.fuzzy_finder == "Fzf" then
-			local titles = {}
-			local title_path_dict = {}
+                            -- Update the title in the newly created buffer
+                            local buf = vim.api.nvim_get_current_buf()
+                            local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+                            for i, line in ipairs(lines) do
+                                if line:match("^title:") then
+                                    lines[i] = "title: " .. prompt
+                                    break
+                                end
+                            end
+                            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+                        end)
+                        return true
+                    end,
+                })
+                :find()
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local titles = {}
+            local title_path_dict = {}
 
 			local norg_files_output =
 				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
-			-- Extract titles and paths from the Neorg files
-			for _, line in pairs(norg_files_output) do
-				local full_path = base_directory .. "/" .. line
-				local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(full_path)
-				if metadata ~= nil then
-					table.insert(titles, metadata["title"])
-					title_path_dict[metadata["title"]] = full_path
-				else
-					table.insert(titles, full_path)
-					title_path_dict[full_path] = full_path
-				end
-			end
+            -- Extract titles and paths from the Neorg files
+            for _, line in pairs(norg_files_output) do
+                local full_path = base_directory .. "/" .. line
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(full_path)
+                if metadata ~= nil then
+                    table.insert(titles, metadata["title"])
+                    title_path_dict[metadata["title"]] = full_path
+                else
+                    table.insert(titles, full_path)
+                    title_path_dict[full_path] = full_path
+                end
+            end
 
-			local NodePreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
+            local NodePreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
 
-			function NodePreview:new(o, opts, fzf_win)
-				NodePreview.super.new(self, o, opts, fzf_win)
-				setmetatable(self, NodePreview)
-				return self
-			end
+            function NodePreview:new(o, opts, fzf_win)
+                NodePreview.super.new(self, o, opts, fzf_win)
+                setmetatable(self, NodePreview)
+                return self
+            end
 
             function NodePreview:parse_entry(entry_str)
                 return {
@@ -337,38 +428,38 @@ module.public = {
 							vim.cmd("edit " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
 							vim.cmd([[Neorg inject-metadata]])
 
-							-- Update the title in the newly created buffer
-							local buf = vim.api.nvim_get_current_buf()
-							local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-							for i, line in ipairs(lines) do
-								if line:match("^title:") then
-									lines[i] = "title: " .. prompt
-									break
-								end
-							end
-							vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-						end,
-					},
-				},
-			})
-		end
-	end,
+                            -- Update the title in the newly created buffer
+                            local buf = vim.api.nvim_get_current_buf()
+                            local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+                            for i, line in ipairs(lines) do
+                                if line:match("^title:") then
+                                    lines[i] = "title: " .. prompt
+                                    break
+                                end
+                            end
+                            vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+                        end,
+                    },
+                },
+            })
+        end
+    end,
 
-	-- Function to find and insert blocks from Neorg files.
-	-- This function searches for task blocks within Neorg files and allows the user to insert
-	-- the selected block into the current buffer.
-	block = function()
-		local fuzzy = module.private.get_fuzzy_finder_modules()
-		if not fuzzy then
-			vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
-			return nil
-		end
+    -- Function to find and insert blocks from Neorg files.
+    -- This function searches for task blocks within Neorg files and allows the user to insert
+    -- the selected block into the current buffer.
+    block = function()
+        local fuzzy = module.private.get_fuzzy_finder_modules()
+        if not fuzzy then
+            vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
+            return nil
+        end
 
-		local current_workspace = module.required["core.dirman"].get_current_workspace()
-		local base_directory = current_workspace[2]
+        local current_workspace = module.required["core.dirman"].get_current_workspace()
+        local base_directory = current_workspace[2]
 
-		-- Define search pattern for different levels of task blocks
-		local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* |^\*\*\*\*\*\* "]]
+        -- Define search pattern for different levels of task blocks
+        local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* |^\*\*\*\*\*\* "]]
 
 		-- Run ripgrep to find matching lines in .norg files
 		local rg_command = "rg "
@@ -379,250 +470,236 @@ module.public = {
 			.. "'"
 		local rg_results = vim.fn.system(rg_command)
 
-		if module.config.public.fuzzy_finder == "Telescope" then
-			-- Process the ripgrep results
-			local matches = {}
-			local pattern = "([^:]+):(%d+):(.*)"
-			for line in rg_results:gmatch("([^\n]+)") do
-				local file, lineno, text = line:match(pattern)
-				local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
-				if metadata ~= nil then
-					table.insert(matches, { file, lineno, text, metadata["title"] })
-				else
-					table.insert(matches, { file, lineno, text, "Untitled" })
-				end
-			end
+        if module.config.public.fuzzy_finder == "Telescope" then
+            -- Process the ripgrep results
+            local matches = {}
+            local pattern = "([^:]+):(%d+):(.*)"
+            for line in rg_results:gmatch("([^\n]+)") do
+                local file, lineno, text = line:match(pattern)
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                if metadata ~= nil then
+                    table.insert(matches, { file, lineno, text, metadata["title"] })
+                else
+                    table.insert(matches, { file, lineno, text, "Untitled" })
+                end
+            end
 
-			local opts = {}
-			opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+            local opts = {}
+            opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-			-- Set up Telescope picker to display and select Neorg blocks
-			module.private.telescope_modules.pickers
-				.new(opts, {
-					prompt_title = "Find Block",
-					finder = module.private.telescope_modules.finders.new_table({
-						results = matches,
-						entry_maker = function(entry)
-							local filename = entry[1]
-							local line_number = tonumber(entry[2])
-							local text = tostring(entry[3])
-							local title = tostring(entry[4])
+            -- Set up Telescope picker to display and select Neorg blocks
+            module.private.telescope_modules.pickers
+                .new(opts, {
+                    prompt_title = "Find Block",
+                    finder = module.private.telescope_modules.finders.new_table({
+                        results = matches,
+                        entry_maker = function(entry)
+                            local filename = entry[1]
+                            local line_number = tonumber(entry[2])
+                            local text = tostring(entry[3])
+                            local title = tostring(entry[4])
 
-							return {
-								value = filename,
-								display = title .. " | " .. text,
-								ordinal = title .. " | " .. text,
-								filename = filename,
-								lnum = line_number,
-								line = text,
-							}
-						end,
-					}),
-					previewer = module.private.telescope_modules.conf.grep_previewer(opts),
-					sorter = module.private.telescope_modules.conf.file_sorter(opts),
-					attach_mappings = function(prompt_bufnr, map)
-						-- Map <C-i> to insert the selected block into the current buffer
-						map("i", "<C-i>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							local filename = entry.filename
-							local base_path = base_directory:gsub("([^%w])", "%%%1")
-							local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
-							-- Insert at the cursor location
-							local heading_prefix = string.match(entry.line, "^(%** )")
-							local heading_text = module.private.get_heading_text(filename, entry.lnum)
-							if not heading_text then
-								return
-							else
-								heading_text = heading_text:gsub("^%s+", "")
-							end
-							local full_heading_text = heading_prefix .. heading_text
+                            return {
+                                value = filename,
+                                display = title .. " | " .. text,
+                                ordinal = title .. " | " .. text,
+                                filename = filename,
+                                lnum = line_number,
+                                line = text,
+                            }
+                        end,
+                    }),
+                    previewer = module.private.telescope_modules.conf.grep_previewer(opts),
+                    sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                    attach_mappings = function(prompt_bufnr, map)
+                        -- Map <C-i> to insert the selected block into the current buffer
+                        map("i", "<C-i>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            local filename = entry.filename
+                            local base_path = base_directory:gsub("([^%w])", "%%%1")
+                            local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
+                            -- Insert at the cursor location
+                            local heading_prefix = string.match(entry.line, "^(%** )")
+                            local heading_text = module.private.get_heading_text(filename, entry.lnum)
+                            if not heading_text then
+                                return
+                            else
+                                heading_text = heading_text:gsub("^%s+", "")
+                            end
+                            local full_heading_text = heading_prefix .. heading_text
 
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							vim.api.nvim_put(
-								{ "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
-								"",
-								false,
-								true
-							)
-						end)
-						return true
-					end,
-				})
-				:find()
-		elseif module.config.public.fuzzy_finder == "Fzf" then
-			local text_string = {}
-			local text_string_matches_dict = {}
-			local pattern = "([^:]+):(%d+):(.*)"
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            vim.api.nvim_put(
+                                { "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
+                                "",
+                                false,
+                                true
+                            )
+                        end)
+                        return true
+                    end,
+                })
+                :find()
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local text_string = {}
+            local text_string_matches_dict = {}
+            local pattern = "([^:]+):(%d+):(.*)"
 
-			for line in rg_results:gmatch("([^\n]+)") do
-				local file, lineno, text = line:match(pattern)
-				local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
-				if metadata ~= nil then
-					table.insert(text_string, metadata["title"] .. " | " .. text)
-					text_string_matches_dict[metadata["title"] .. " | " .. text] = {
-						["file"] = file,
-						["line"] = lineno,
-						["title"] = metadata["title"],
-						["heading_text"] = text,
-					}
-				else
-					table.insert(text_string, file .. " | " .. text)
-					text_string_matches_dict[file .. " | " .. text] = {
-						["file"] = file,
-						["line"] = lineno,
-						["title"] = file,
-						["heading_text"] = text,
-					}
-				end
-			end
+            for line in rg_results:gmatch("([^\n]+)") do
+                local file, lineno, text = line:match(pattern)
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                if metadata ~= nil then
+                    table.insert(text_string, metadata["title"] .. " | " .. text)
+                    text_string_matches_dict[metadata["title"] .. " | " .. text] = {
+                        ["file"] = file,
+                        ["line"] = lineno,
+                        ["title"] = metadata["title"],
+                        ["heading_text"] = text,
+                    }
+                else
+                    table.insert(text_string, file .. " | " .. text)
+                    text_string_matches_dict[file .. " | " .. text] = {
+                        ["file"] = file,
+                        ["line"] = lineno,
+                        ["title"] = file,
+                        ["heading_text"] = text,
+                    }
+                end
+            end
 
-			local BlockPreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
+            local BlockPreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
 
-			function BlockPreview:new(o, opts, fzf_win)
-				BlockPreview.super.new(self, o, opts, fzf_win)
-				setmetatable(self, BlockPreview)
-				return self
-			end
+            function BlockPreview:new(o, opts, fzf_win)
+                BlockPreview.super.new(self, o, opts, fzf_win)
+                setmetatable(self, BlockPreview)
+                return self
+            end
 
-			function BlockPreview:parse_entry(entry_str)
-				return {
-					path = text_string_matches_dict[entry_str] == nil and "/tmp/"
-						or text_string_matches_dict[entry_str]["file"],
-					line = text_string_matches_dict[entry_str] == nil and 1
-						or text_string_matches_dict[entry_str]["line"],
-					col = 1,
-				}
-			end
+            function BlockPreview:parse_entry(entry_str)
+                return {
+                    path = text_string_matches_dict[entry_str] == nil and "/tmp/"
+                        or text_string_matches_dict[entry_str]["file"],
+                    line = text_string_matches_dict[entry_str] == nil and 1
+                        or text_string_matches_dict[entry_str]["line"],
+                    col = 1,
+                }
+            end
 
-			module.private.fzf_modules.fzf_lua.fzf_exec(text_string, {
-				previewer = BlockPreview,
-				prompt = "Find Neorg Block> ",
-				actions = {
-					["default"] = {
-						function(selected, _)
-							vim.cmd("new " .. text_string_matches_dict[selected[1]]["file"])
-							vim.cmd(":" .. text_string_matches_dict[selected[1]]["line"])
-						end,
-					},
-					["ctrl-i"] = {
-						function(selected, _)
-							local filename = text_string_matches_dict[selected[1]]["file"]
-							local base_path = base_directory:gsub("([^%w])", "%%%1")
-							local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
+            module.private.fzf_modules.fzf_lua.fzf_exec(text_string, {
+                previewer = BlockPreview,
+                prompt = "Find Neorg Block> ",
+                actions = {
+                    ["default"] = {
+                        function(selected, _)
+                            vim.cmd("new " .. text_string_matches_dict[selected[1]]["file"])
+                            vim.cmd(":" .. text_string_matches_dict[selected[1]]["line"])
+                        end,
+                    },
+                    ["ctrl-i"] = {
+                        function(selected, _)
+                            local filename = text_string_matches_dict[selected[1]]["file"]
+                            local base_path = base_directory:gsub("([^%w])", "%%%1")
+                            local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
 
-							local heading_prefix =
-								string.match(text_string_matches_dict[selected[1]]["heading_text"], "^(%** )")
-							local heading_text = module.private.get_heading_text(
-								filename,
-								tonumber(text_string_matches_dict[selected[1]]["line"])
-							)
-							if not heading_text then
-								return
-							else
-								heading_text = heading_text:gsub("^%s+", "")
-							end
-							local full_heading_text = heading_prefix .. heading_text
+                            local heading_prefix =
+                                string.match(text_string_matches_dict[selected[1]]["heading_text"], "^(%** )")
+                            local heading_text = module.private.get_heading_text(
+                                filename,
+                                tonumber(text_string_matches_dict[selected[1]]["line"])
+                            )
+                            if not heading_text then
+                                return
+                            else
+                                heading_text = heading_text:gsub("^%s+", "")
+                            end
+                            local full_heading_text = heading_prefix .. heading_text
 
-							vim.cmd("q")
-							vim.api.nvim_put(
-								{ "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
-								"",
-								true,
-								true
-							)
-						end,
-					},
-				},
-			})
-		end
-	end,
+                            vim.cmd("q")
+                            vim.api.nvim_put(
+                                { "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
+                                "",
+                                true,
+                                true
+                            )
+                        end,
+                    },
+                },
+            })
+        end
+    end,
 
-	-- Function to select and switch between Neorg workspaces.
-	-- This function lists available workspaces and allows the user to switch to a selected workspace.
-	workspace_selector = function()
-		local fuzzy = module.private.get_fuzzy_finder_modules()
-		if not fuzzy then
-			vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
-			return nil
-		end
+    -- Function to select and switch between Neorg workspaces.
+    -- This function lists available workspaces and allows the user to switch to a selected workspace.
+    workspace_selector = function()
+        local fuzzy = module.private.get_fuzzy_finder_modules()
+        if not fuzzy then
+            vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
+            return nil
+        end
 
-		local workspaces = module.required["core.dirman"].get_workspaces()
-		local workspace_names = {}
-		-- Collect the names of all workspaces
-		for name in pairs(workspaces) do
-			table.insert(workspace_names, name)
-		end
+        local workspaces = module.required["core.dirman"].get_workspaces()
+        local workspace_names = {}
+        -- Collect the names of all workspaces
+        for name in pairs(workspaces) do
+            table.insert(workspace_names, name)
+        end
 
-		if module.config.public.fuzzy_finder == "Telescope" then
-			local opts = {}
-			opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+        if module.config.public.fuzzy_finder == "Telescope" then
+            local opts = {}
+            opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-			-- Set up Telescope picker to display and select Neorg workspaces
-			module.private.telescope_modules.pickers
-				.new(opts, {
-					prompt_title = "Find Neorg Workspace",
-					finder = module.private.telescope_modules.finders.new_table({
-						results = workspace_names,
-						entry_maker = function(entry)
-							local filename = workspaces[entry] .. "/index.norg"
+            -- Set up Telescope picker to display and select Neorg workspaces
+            module.private.telescope_modules.pickers
+                .new(opts, {
+                    prompt_title = "Find Neorg Workspace",
+                    finder = module.private.telescope_modules.finders.new_table({
+                        results = workspace_names,
+                        entry_maker = function(entry)
+                            local filename = workspaces[entry] .. "/index.norg"
 
-							return {
-								value = filename,
-								display = entry,
-								ordinal = entry,
-								filename = filename,
-							}
-						end,
-					}),
-					previewer = module.private.telescope_modules.conf.file_previewer(opts),
-					sorter = module.private.telescope_modules.conf.file_sorter(opts),
-					attach_mappings = function(prompt_bufnr, map)
-						-- Map <CR> to switch to the selected workspace
-						map("i", "<CR>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							module.required["core.dirman"].set_workspace(tostring(entry.display))
-						end)
-						map("n", "<CR>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							module.required["core.dirman"].set_workspace(tostring(entry.display))
-						end)
-						map("i", "<C-i>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							module.required["core.dirman"].set_workspace(tostring(entry.display))
-							vim.cmd("new " .. workspaces[entry.display] .. "/index.norg")
-							vim.cmd(":1")
-						end)
-						map("n", "<C-i>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							module.required["core.dirman"].set_workspace(tostring(entry.display))
-							vim.cmd("new " .. workspaces[entry.display] .. "/index.norg")
-							vim.cmd(":1")
-						end)
+                            return {
+                                value = filename,
+                                display = entry,
+                                ordinal = entry,
+                                filename = filename,
+                            }
+                        end,
+                    }),
+                    previewer = module.private.telescope_modules.conf.file_previewer(opts),
+                    sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                    attach_mappings = function(prompt_bufnr, map)
+                        -- Map <CR> to switch to the selected workspace
+                        map("i", "<CR>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            module.required["core.dirman"].set_workspace(tostring(entry.display))
+                        end)
+                        map("n", "<CR>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            module.required["core.dirman"].set_workspace(tostring(entry.display))
+                        end)
 
-						return true
-					end,
-				})
-				:find()
-		elseif module.config.public.fuzzy_finder == "Fzf" then
-			local WorkspacePreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
+                        return true
+                    end,
+                })
+                :find()
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local WorkspacePreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
 
-			function WorkspacePreview:new(o, opts, fzf_win)
-				WorkspacePreview.super.new(self, o, opts, fzf_win)
-				setmetatable(self, WorkspacePreview)
-				return self
-			end
+            function WorkspacePreview:new(o, opts, fzf_win)
+                WorkspacePreview.super.new(self, o, opts, fzf_win)
+                setmetatable(self, WorkspacePreview)
+                return self
+            end
 
-			function WorkspacePreview:parse_entry(entry_str)
-				return {
-					path = workspaces[entry_str] == nil and "/tmp/" or workspaces[entry_str] .. "/index.norg",
-					line = 1,
-					col = 1,
-				}
-			end
+            function WorkspacePreview:parse_entry(entry_str)
+                return {
+                    path = workspaces[entry_str] == nil and "/tmp/" or workspaces[entry_str] .. "/index.norg",
+                    line = 1,
+                    col = 1,
+                }
+            end
 
 			module.private.fzf_modules.fzf_lua.fzf_exec(workspace_names, {
 				previewer = WorkspacePreview,
@@ -646,27 +723,27 @@ module.public = {
 		end
 	end,
 
-	-- Function to find and display backlinks to the current Neorg file.
-	-- This function searches for references to the current file in other Neorg files and lists them.
-	backlinks = function()
-		local fuzzy = module.private.get_fuzzy_finder_modules()
-		if not fuzzy then
-			vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
-			return nil
-		end
+    -- Function to find and display backlinks to the current Neorg file.
+    -- This function searches for references to the current file in other Neorg files and lists them.
+    backlinks = function()
+        local fuzzy = module.private.get_fuzzy_finder_modules()
+        if not fuzzy then
+            vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
+            return nil
+        end
 
-		local current_workspace = module.required["core.dirman"].get_current_workspace()
-		local base_directory = current_workspace[2]
+        local current_workspace = module.required["core.dirman"].get_current_workspace()
+        local base_directory = current_workspace[2]
 
-		-- Get the path of the current file and convert it to a relative path within the workspace
-		local current_file_path = vim.fn.expand("%:p")
-		local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
-		local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
-		if relative_path == nil then
-			vim.notify("Current Node isn't a part of the Current Neorg Workspace", vim.log.levels.ERROR)
-			return
-		end
-		local search_path = "{:$/" .. relative_path .. ":"
+        -- Get the path of the current file and convert it to a relative path within the workspace
+        local current_file_path = vim.fn.expand("%:p")
+        local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
+        local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
+        if relative_path == nil then
+            vim.notify("Current Node isn't a part of the Current Neorg Workspace", vim.log.levels.ERROR)
+            return
+        end
+        local search_path = "{:$/" .. relative_path .. ":"
 
 		-- Run ripgrep to find backlinks in other Neorg files
 		local rg_command = "rg --fixed-strings "
@@ -679,37 +756,37 @@ module.public = {
 			.. "'"
 		local rg_results = vim.fn.system(rg_command)
 
-		-- Process the ripgrep results to identify backlinks
-		local self_title =
-			module.required["external.many-mans"]["meta-man"].extract_file_metadata(current_file_path)["title"]
+        -- Process the ripgrep results to identify backlinks
+        local self_title =
+            module.required["external.many-mans"]["meta-man"].extract_file_metadata(current_file_path)["title"]
 
-		if not module.config.public.fuzzy_backlinks then
-			local buffer_lines = {}
-			table.insert(buffer_lines, "")
-			table.insert(buffer_lines, "* Backlinks to -- [" .. self_title .. "]")
-			table.insert(buffer_lines, "")
-			table.insert(buffer_lines, "___")
-			table.insert(buffer_lines, "")
-			table.insert(buffer_lines, "")
+        if not module.config.public.fuzzy_backlinks then
+            local buffer_lines = {}
+            table.insert(buffer_lines, "")
+            table.insert(buffer_lines, "* Backlinks to -- [" .. self_title .. "]")
+            table.insert(buffer_lines, "")
+            table.insert(buffer_lines, "___")
+            table.insert(buffer_lines, "")
+            table.insert(buffer_lines, "")
 
-			for line in rg_results:gmatch("([^\n]+)") do
-				local file, lineno = line:match("^(.-):(%d+):")
-				local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+            for line in rg_results:gmatch("([^\n]+)") do
+                local file, lineno = line:match("^(.-):(%d+):")
+                local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
 
-				if metadata == nil then
-					table.insert(buffer_lines, "** {:" .. file .. ":" .. lineno .. "}[Untitled @" .. lineno .. "]")
-				elseif metadata["title"] ~= self_title then
-					table.insert(
-						buffer_lines,
-						"** {:" .. file .. ":" .. lineno .. "}[" .. metadata["title"] .. " @" .. lineno .. "]"
-					)
+                if metadata == nil then
+                    table.insert(buffer_lines, "** {:" .. file .. ":" .. lineno .. "}[Untitled @" .. lineno .. "]")
+                elseif metadata["title"] ~= self_title then
+                    table.insert(
+                        buffer_lines,
+                        "** {:" .. file .. ":" .. lineno .. "}[" .. metadata["title"] .. " @" .. lineno .. "]"
+                    )
 
-					local startrow = 0
-					if lineno - 3 < 1 then
-						startrow = 0
-					else
-						startrow = lineno - 3
-					end
+                    local startrow = 0
+                    if lineno - 3 < 1 then
+                        startrow = 0
+                    else
+                        startrow = lineno - 3
+                    end
 
 					local endrow = 0
 					local wc_out = vim.fn.system("wc -l '" .. file .. "'")
@@ -720,120 +797,153 @@ module.public = {
 						endrow = lineno + 3
 					end
 
-					table.insert(buffer_lines, "@code norg")
-					local curr_row = 0
-					for row in io.lines(file) do
-						curr_row = curr_row + 1
-						if curr_row >= startrow and curr_row <= endrow then
-							-- Escape out any lines that start with @
-							-- because it can interfere with the @code ... @end block
-							row = row:gsub("^@", "\\@")
-							table.insert(buffer_lines, row)
-						end
-					end
-					table.insert(buffer_lines, "@end")
-					table.insert(buffer_lines, "___")
-				end
-			end
+                    table.insert(buffer_lines, "@code norg")
+                    local curr_row = 0
+                    for row in io.lines(file) do
+                        curr_row = curr_row + 1
+                        if curr_row >= startrow and curr_row <= endrow then
+                            -- Escape out any lines that start with @
+                            -- because it can interfere with the @code ... @end block
+                            row = row:gsub("^@", "\\@")
+                            table.insert(buffer_lines, row)
+                        end
+                    end
+                    table.insert(buffer_lines, "@end")
+                    table.insert(buffer_lines, "___")
+                end
+            end
 
-			module.required["external.many-mans"]["buff-man"].create_backlinks_buffer(buffer_lines)
-		else
-			if module.config.public.fuzzy_finder == "Telescope" then
-				local matches = {}
-				for line in rg_results:gmatch("([^\n]+)") do
-					local file, lineno = line:match("^(.-):(%d+):")
-					local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
-					if metadata == nil then
-						table.insert(matches, { file, lineno, "Untitled" })
-					elseif metadata["title"] ~= self_title then
-						table.insert(matches, { file, lineno, metadata["title"] })
-					else
-						table.insert(matches, { file, lineno, "Untitled" })
-					end
-				end
+            module.required["external.many-mans"]["buff-man"].create_backlinks_buffer(buffer_lines)
+        else
+            if module.config.public.fuzzy_finder == "Telescope" then
+                local matches = {}
+                for line in rg_results:gmatch("([^\n]+)") do
+                    local file, lineno = line:match("^(.-):(%d+):")
+                    local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                    if metadata == nil then
+                        table.insert(matches, { file, lineno, "Untitled" })
+                    elseif metadata["title"] ~= self_title then
+                        table.insert(matches, { file, lineno, metadata["title"] })
+                    else
+                        table.insert(matches, { file, lineno, "Untitled" })
+                    end
+                end
 
-				local opts = {}
-				opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
+                local opts = {}
+                opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-				-- Set up Telescope picker to display and select backlinks
-				module.private.telescope_modules.pickers
-					.new(opts, {
-						prompt_title = "Backlinks",
-						finder = module.private.telescope_modules.finders.new_table({
-							results = matches,
-							entry_maker = function(entry)
-								local filename = entry[1]
-								local line_number = tonumber(entry[2])
-								local title = entry[3]
+                -- Set up Telescope picker to display and select backlinks
+                module.private.telescope_modules.pickers
+                    .new(opts, {
+                        prompt_title = "Backlinks",
+                        finder = module.private.telescope_modules.finders.new_table({
+                            results = matches,
+                            entry_maker = function(entry)
+                                local filename = entry[1]
+                                local line_number = tonumber(entry[2])
+                                local title = entry[3]
 
-								return {
-									value = filename,
-									display = title .. "  @" .. line_number,
-									ordinal = title,
-									filename = filename,
-									lnum = line_number,
-								}
-							end,
-						}),
-						previewer = module.private.telescope_modules.conf.grep_previewer(opts),
-						sorter = module.private.telescope_modules.conf.file_sorter(opts),
-					})
-					:find()
-			elseif module.config.public.fuzzy_finder == "Fzf" then
-				local backlink_texts = {}
-				local backlink_text_matches_dict = {}
-				for line in rg_results:gmatch("([^\n]+)") do
-					local file, lineno = line:match("^(.-):(%d+):")
-					local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
-					if metadata == nil then
-						table.insert(backlink_texts, "Untitled @" .. lineno)
-						backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
-					elseif metadata["title"] ~= self_title then
-						table.insert(backlink_texts, metadata["title"] .. " @" .. lineno)
-						backlink_text_matches_dict[metadata["title"] .. " @" .. lineno] =
-							{ ["file"] = file, ["line"] = lineno }
-					else
-						table.insert(backlink_texts, "Untitled @" .. lineno)
-						backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
-					end
-				end
+                                return {
+                                    value = filename,
+                                    display = title .. "  @" .. line_number,
+                                    ordinal = title,
+                                    filename = filename,
+                                    lnum = line_number,
+                                }
+                            end,
+                        }),
+                        previewer = module.private.telescope_modules.conf.grep_previewer(opts),
+                        sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                    })
+                    :find()
+            elseif module.config.public.fuzzy_finder == "Fzf" then
+                local backlink_texts = {}
+                local backlink_text_matches_dict = {}
+                for line in rg_results:gmatch("([^\n]+)") do
+                    local file, lineno = line:match("^(.-):(%d+):")
+                    local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                    if metadata == nil then
+                        table.insert(backlink_texts, "Untitled @" .. lineno)
+                        backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
+                    elseif metadata["title"] ~= self_title then
+                        table.insert(backlink_texts, metadata["title"] .. " @" .. lineno)
+                        backlink_text_matches_dict[metadata["title"] .. " @" .. lineno] =
+                        { ["file"] = file, ["line"] = lineno }
+                    else
+                        table.insert(backlink_texts, "Untitled @" .. lineno)
+                        backlink_text_matches_dict["Untitled @" .. lineno] = { ["file"] = file, ["line"] = lineno }
+                    end
+                end
 
-				local BacklinksPreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
+                local BacklinksPreview = module.private.fzf_modules.builtin_previewer.buffer_or_file:extend()
 
-				function BacklinksPreview:new(o, opts, fzf_win)
-					BacklinksPreview.super.new(self, o, opts, fzf_win)
-					setmetatable(self, BacklinksPreview)
-					return self
-				end
+                function BacklinksPreview:new(o, opts, fzf_win)
+                    BacklinksPreview.super.new(self, o, opts, fzf_win)
+                    setmetatable(self, BacklinksPreview)
+                    return self
+                end
 
-				function BacklinksPreview:parse_entry(entry_str)
-					return {
-						path = backlink_text_matches_dict[entry_str] == nil and "/tmp/"
-							or backlink_text_matches_dict[entry_str]["file"],
-						line = backlink_text_matches_dict[entry_str] == nil and 1
-							or backlink_text_matches_dict[entry_str]["line"],
-						col = 1,
-					}
-				end
+                function BacklinksPreview:parse_entry(entry_str)
+                    return {
+                        path = backlink_text_matches_dict[entry_str] == nil and "/tmp/"
+                            or backlink_text_matches_dict[entry_str]["file"],
+                        line = backlink_text_matches_dict[entry_str] == nil and 1
+                            or backlink_text_matches_dict[entry_str]["line"],
+                        col = 1,
+                    }
+                end
 
-				module.private.fzf_modules.fzf_lua.fzf_exec(backlink_texts, {
-					previewer = BacklinksPreview,
-					prompt = "Backlinks> ",
-					actions = {
-						["default"] = {
-							function(selected, _)
-								vim.cmd("new " .. backlink_text_matches_dict[selected[1]]["file"])
-								vim.cmd(":" .. backlink_text_matches_dict[selected[1]]["line"])
-							end,
-						},
-					},
-				})
-			end
-		end
-	end,
+                module.private.fzf_modules.fzf_lua.fzf_exec(backlink_texts, {
+                    previewer = BacklinksPreview,
+                    prompt = "Backlinks> ",
+                    actions = {
+                        ["default"] = {
+                            function(selected, _)
+                                vim.cmd("new " .. backlink_text_matches_dict[selected[1]]["file"])
+                                vim.cmd(":" .. backlink_text_matches_dict[selected[1]]["line"])
+                            end,
+                        },
+                    },
+                })
+            end
+        end
+    end,
 
-	-- Function to create a capture buffer and append text to today's journal entry
-	capture = function() end,
+    -- Function to create a capture buffer and append text to today's journal entry
+    capture = function(template)
+        -- Search current workspace directory for a
+        -- Open a file in /tmp directory with name generated
+        -- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
+        -- Open capture buffer to that
+        local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+
+        -- First check if default templates are populated
+        local templates_present = module.private.verify_default_capture_templates()
+        if not templates_present then
+            module.private.generate_default_capture_templates()
+        end
+
+        -- If input is a custom template, check if that exists
+        local template_exists = io.open(current_workspace .. "/capture-templates/" .. template[1] .. ".norg", "r")
+        if not template_exists then
+            vim.notify("Template " .. template[1] .. ".norg does not exist in $workspace/capture-templates folder",
+                vim.log.levels.WARN)
+
+            local ok, _, code = os.rename(current_workspace .. "/capture-templates",
+                current_workspace .. "/capture-templates")
+            if not ok and code == 2 then
+                vim.fn.mkdir(current_workspace .. "/capture-templates", "p")
+            end
+
+            vim.cmd("edit " .. current_workspace .. "/capture-templates/" .. template[1] .. ".norg")
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
+            return
+        end
+
+        if template[1] ~= "selection" then
+        else
+        end
+    end,
 }
 
 module.on_event = function(event)
@@ -845,6 +955,8 @@ module.on_event = function(event)
 		module.public.backlinks()
 	elseif event.split_type[2] == "external.roam.select_workspace" then
 		module.public.workspace_selector()
+	elseif event.split_type[2] == "external.roam.capture" then
+		module.public.capture(event.content)
 	end
 end
 
