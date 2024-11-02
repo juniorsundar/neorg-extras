@@ -909,13 +909,14 @@ module.public = {
         end
     end,
 
-    -- Function to create a capture buffer and append text to today's journal entry
-    capture = function(template)
-        -- Search current workspace directory for a
-        -- Open a file in /tmp directory with name generated
-        -- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
-        -- Open capture buffer to that
-        local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+	-- Function to create a capture buffer and append text to today's journal entry
+	---@param template string Template name for capture buffer
+	capture = function(template)
+		-- Search current workspace directory for a
+		-- Open a file in /tmp directory with name generated
+		-- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
+		-- Open capture buffer to that
+		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
 
         -- First check if default templates are populated
         local templates_present = module.private.verify_default_capture_templates()
@@ -923,11 +924,13 @@ module.public = {
             module.private.generate_default_capture_templates()
         end
 
-        -- If input is a custom template, check if that exists
-        local template_exists = io.open(current_workspace .. "/capture-templates/" .. template[1] .. ".norg", "r")
-        if not template_exists then
-            vim.notify("Template " .. template[1] .. ".norg does not exist in $workspace/capture-templates folder",
-                vim.log.levels.WARN)
+		-- If input is a custom template, check if that exists
+		local template_exists = io.open(current_workspace .. "/capture-templates/" .. template .. ".norg", "r")
+		if not template_exists then
+			vim.notify(
+				"Template " .. template .. ".norg does not exist in $workspace/capture-templates folder",
+				vim.log.levels.WARN
+			)
 
             local ok, _, code = os.rename(current_workspace .. "/capture-templates",
                 current_workspace .. "/capture-templates")
@@ -935,10 +938,10 @@ module.public = {
                 vim.fn.mkdir(current_workspace .. "/capture-templates", "p")
             end
 
-            vim.cmd("edit " .. current_workspace .. "/capture-templates/" .. template[1] .. ".norg")
-            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
-            return
-        end
+			vim.cmd("edit " .. current_workspace .. "/capture-templates/" .. template .. ".norg")
+			vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
+			return
+		end
 
         if template[1] ~= "selection" then
         else
@@ -956,7 +959,7 @@ module.on_event = function(event)
 	elseif event.split_type[2] == "external.roam.select_workspace" then
 		module.public.workspace_selector()
 	elseif event.split_type[2] == "external.roam.capture" then
-		module.public.capture(event.content)
+		module.public.capture(event.content[1])
 	end
 end
 
