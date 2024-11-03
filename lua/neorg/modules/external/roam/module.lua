@@ -99,14 +99,12 @@ module.private = {
 		for key, value in pairs(module.private.default_capture_templates) do
 			local file_path = dir_path .. "/" .. key .. ".norg"
 
-			local file = io.open(file_path, "r")
-			if not file then
+            local file = vim.fn.filereadable(file_path)
+			if file ~= 1 then
 				vim.cmd("edit " .. file_path)
 				vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(value, "\n"))
 				vim.cmd("w")
 				vim.cmd("bd")
-			else
-				file:close()
 			end
 		end
 	end,
@@ -926,6 +924,8 @@ module.public = {
 
 		-- If input is a custom template, check if that exists
         local template_path = current_workspace .. "/.capture-templates/" .. template .. ".norg"
+		local template_exists = vim.fn.filereadable(template_path)
+		if template_exists ~= 1 then
 			vim.notify(
 				"Template " .. template .. ".norg does not exist in $workspace/.capture-templates folder",
 				vim.log.levels.WARN
@@ -942,10 +942,12 @@ module.public = {
 			return
 		end
 
-        if template[1] ~= "selection" then
-        else
-        end
-    end,
+		if template[1] ~= "selection" then
+            local lines = vim.fn.readfile(template_path)
+            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines)
+		-- else
+		end
+	end,
 }
 
 module.on_event = function(event)
