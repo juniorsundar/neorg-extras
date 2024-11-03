@@ -89,11 +89,11 @@ module.private = {
 
 	generate_default_capture_templates = function()
 		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
-		local dir_path = current_workspace .. "/capture-templates"
+		local dir_path = current_workspace .. "/.capture-templates"
 
 		local ok, _, code = os.rename(dir_path, dir_path)
 		if not ok and code == 2 then
-			vim.fn.mkdir(current_workspace .. "/capture-templates", "p")
+			vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
 		end
 
 		for key, value in pairs(module.private.default_capture_templates) do
@@ -122,7 +122,7 @@ module.private = {
 		end
 
 		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
-		local dir_path = current_workspace .. "/capture-templates"
+		local dir_path = current_workspace .. "/.capture-templates"
 
 		local ok, _, code = os.rename(dir_path, dir_path)
 		if not ok and code == 2 then
@@ -925,20 +925,19 @@ module.public = {
         end
 
 		-- If input is a custom template, check if that exists
-		local template_exists = io.open(current_workspace .. "/capture-templates/" .. template .. ".norg", "r")
-		if not template_exists then
+        local template_path = current_workspace .. "/.capture-templates/" .. template .. ".norg"
 			vim.notify(
-				"Template " .. template .. ".norg does not exist in $workspace/capture-templates folder",
+				"Template " .. template .. ".norg does not exist in $workspace/.capture-templates folder",
 				vim.log.levels.WARN
 			)
 
-            local ok, _, code = os.rename(current_workspace .. "/capture-templates",
-                current_workspace .. "/capture-templates")
-            if not ok and code == 2 then
-                vim.fn.mkdir(current_workspace .. "/capture-templates", "p")
-            end
+			local ok, _, code =
+				os.rename(current_workspace .. "/.capture-templates", current_workspace .. "/.capture-templates")
+			if not ok and code == 2 then
+				vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
+			end
 
-			vim.cmd("edit " .. current_workspace .. "/capture-templates/" .. template .. ".norg")
+			vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. template .. ".norg")
 			vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
 			return
 		end
