@@ -824,11 +824,6 @@ module.public = {
 		---@return integer buffer_number
 		---@return integer window_number
 		create_backlinks_buffer = function(buffer_lines)
-			-- Populate the default_winopts table with current window options
-			for _, opt in ipairs(module.public["buff-man"].default_winopts) do
-				opt[2] = vim.api.nvim_get_option_value(opt[1], { win = module.public["buff-man"].win })
-			end
-
 			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
 
 			vim.api.nvim_command("vsplit")
