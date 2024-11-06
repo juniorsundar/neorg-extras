@@ -42,7 +42,8 @@ module.load = function()
 					name = "external.roam.select_workspace",
 				},
 				["capture"] = {
-					args = 1,
+					min_args = 1,
+					max_args = 2,
 					complete = {
 						{
 							"todo",
@@ -908,8 +909,8 @@ module.public = {
     end,
 
 	-- Function to create a capture buffer and append text to today's journal entry
-	---@param template string Template name for capture buffer
-	capture = function(template)
+	---@param input_table table Template name and split kind
+	capture = function(input_table)
 		-- Search current workspace directory for a
 		-- Open a file in /tmp directory with name generated
 		-- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
@@ -923,11 +924,11 @@ module.public = {
         end
 
 		-- If input is a custom template, check if that exists
-        local template_path = current_workspace .. "/.capture-templates/" .. template .. ".norg"
+        local template_path = current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg"
 		local template_exists = vim.fn.filereadable(template_path)
 		if template_exists ~= 1 then
 			vim.notify(
-				"Template " .. template .. ".norg does not exist in $workspace/.capture-templates folder",
+				"Template " .. input_table['template'] .. ".norg does not exist in $workspace/.capture-templates folder",
 				vim.log.levels.WARN
 			)
 
@@ -937,14 +938,14 @@ module.public = {
 				vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
 			end
 
-			vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. template .. ".norg")
+			vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg")
 			vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
 			return
 		end
 
-		if template[1] ~= "selection" then
+		if input_table['template'] ~= "selection" then
             local lines = vim.fn.readfile(template_path)
-            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines)
+            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines, input_table['kind'])
 		-- else
 		end
 	end,
@@ -960,7 +961,11 @@ module.on_event = function(event)
 	elseif event.split_type[2] == "external.roam.select_workspace" then
 		module.public.workspace_selector()
 	elseif event.split_type[2] == "external.roam.capture" then
-		module.public.capture(event.content[1])
+        local input_table = {
+            template = event.content[1], -- Template name
+            kind = #event.content > 1 and event.content[2]:match("=(.+)") or "split" -- Split kind
+        }
+		module.public.capture(input_table)
 	end
 end
 
