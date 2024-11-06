@@ -90,19 +90,20 @@ return {
                 -- MANDATORY
                 ["external.many-mans"] = {
                     config = {
-                        metadata_fold = true -- If want @data property ... @end to fold
-                        code_fold = true -- If want @code ... @end to fold
+                        metadata_fold = true, -- If want @data property ... @end to fold
+                        code_fold = true, -- If want @code ... @end to fold
                     }
                 },
                 -- OPTIONAL
                 ["external.agenda"] = {},
                 ["external.roam"] = {
                     config = {
-                        fuzzy_finder = "Telescope" -- OR "Fzf" ... Defaults to "Telescope"
-                        fuzzy_backlinks = false -- Set to "true" for backlinks in fuzzy finder instead of buffer
+                        fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
+                        fuzzy_backlinks = false, -- Set to "true" for backlinks in fuzzy finder instead of buffer
                     }
                 },
-            })
+            }
+        })
 
         -- I add this line here because I want to open 
         -- up the default Neorg workspace whenever a Neovim instance
