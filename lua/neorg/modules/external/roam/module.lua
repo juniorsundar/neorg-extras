@@ -576,6 +576,20 @@ module.public = {
 							module.private.telescope_modules.actions.close(prompt_bufnr)
 							module.required["core.dirman"].set_workspace(tostring(entry.display))
 						end)
+						map("i", "<C-i>", function()
+							local entry = module.private.telescope_modules.state.get_selected_entry()
+							module.private.telescope_modules.actions.close(prompt_bufnr)
+							module.required["core.dirman"].set_workspace(tostring(entry.display))
+							vim.cmd("new " .. workspaces[entry.display] .. "/index.norg")
+							vim.cmd(":1")
+						end)
+						map("n", "<C-i>", function()
+							local entry = module.private.telescope_modules.state.get_selected_entry()
+							module.private.telescope_modules.actions.close(prompt_bufnr)
+							module.required["core.dirman"].set_workspace(tostring(entry.display))
+							vim.cmd("new " .. workspaces[entry.display] .. "/index.norg")
+							vim.cmd(":1")
+						end)
 
 						return true
 					end,
@@ -603,6 +617,11 @@ module.public = {
 				prompt = "Find Neorg Workspace> ",
 				actions = {
 					["default"] = {
+						function(selected, _)
+							module.required["core.dirman"].set_workspace(tostring(selected[1]))
+						end,
+					},
+					["ctrl-i"] = {
 						function(selected, _)
 							module.required["core.dirman"].set_workspace(tostring(selected[1]))
 							vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
