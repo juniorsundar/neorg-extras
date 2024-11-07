@@ -333,11 +333,9 @@ module.public = {
                             (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
                             vim.fn.mkdir(vault_dir, "p")
 
-                            -- Create and open a new Neorg file with the generated title token
-                            vim.api.nvim_command(
-                                "edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg"
-                            )
-                            vim.cmd([[Neorg inject-metadata]])
+							-- Create and open a new Neorg file with the generated title token
+							vim.cmd("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+							vim.cmd([[Neorg inject-metadata]])
 
                             -- Update the title in the newly created buffer
                             local buf = vim.api.nvim_get_current_buf()
