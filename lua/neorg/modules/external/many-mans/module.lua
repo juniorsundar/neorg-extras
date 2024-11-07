@@ -827,7 +827,7 @@ module.public = {
 		create_backlinks_buffer = function(buffer_lines)
 			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
 
-			vim.api.nvim_command("vsplit")
+			vim.cmd("vsplit")
 
 			-- Get the new window ID and set the buffer in the new split
 			module.public["buff-man"].win = vim.api.nvim_get_current_win()
@@ -847,7 +847,7 @@ module.public = {
 			vim.api.nvim_set_option_value("number", false, { win = module.public["buff-man"].win })
 			vim.api.nvim_set_option_value("relativenumber", false, { win = module.public["buff-man"].win })
 
-			vim.api.nvim_command("set foldlevel=1")
+			vim.cmd("set foldlevel=1")
 			-- Set keymaps for the buffer
 			vim.api.nvim_buf_set_keymap(module.public["buff-man"].buf, "n", "<cr>", "", {
 				noremap = true,
