@@ -776,12 +776,13 @@ module.public = {
 		---@return integer window_number
 		create_view_buffer = function(buffer_lines)
 			-- Populate the default_winopts table with current window options
+			module.public["buff-man"].win = vim.api.nvim_get_current_win()
+			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
 			for _, opt in ipairs(module.public["buff-man"].default_winopts) do
 				opt[2] = vim.api.nvim_get_option_value(opt[1], { win = module.public["buff-man"].win })
 			end
 
 			module.public["buff-man"].buf = vim.api.nvim_create_buf(true, true)
-
 			module.public["buff-man"].win = vim.api.nvim_get_current_win()
 			vim.api.nvim_win_set_buf(module.public["buff-man"].win, module.public["buff-man"].buf)
 			vim.api.nvim_buf_set_lines(module.public["buff-man"].buf, 0, -1, false, buffer_lines)
