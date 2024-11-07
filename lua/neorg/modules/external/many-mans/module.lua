@@ -245,10 +245,10 @@ module.public = {
 			local push_text = table.concat(text, "\n")
 			local lines = vim.split(push_text, "\n")
 			vim.api.nvim_buf_set_lines(bufnr, row, row, false, lines)
-            vim.api.nvim_buf_call(bufnr, function()
-                vim.cmd(string.format("%d,%dnormal! ==", row + 1, row + #lines))
-            end)
-        end,
+			vim.api.nvim_buf_call(bufnr, function()
+				vim.cmd(string.format("%d,%dnormal! ==", row + 1, row + #lines))
+			end)
+		end,
 
 		delete_property_metadata = function(row, bufnr)
 			local total_lines = vim.api.nvim_buf_line_count(bufnr)

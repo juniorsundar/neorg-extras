@@ -233,9 +233,7 @@ module.public = {
 							vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
-							vim.cmd(
-								"edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg"
-							)
+							vim.cmd("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
 							vim.cmd([[Neorg inject-metadata]])
 
 							-- Update the title in the newly created buffer
