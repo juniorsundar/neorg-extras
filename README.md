@@ -100,6 +100,7 @@ return {
                     config = {
                         fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
                         fuzzy_backlinks = false, -- Set to "true" for backlinks in fuzzy finder instead of buffer
+                        roam_base_directory = "" -- Directory in current workspace to store roam nodes
                     }
                 },
             }
@@ -176,10 +177,7 @@ You want to insert the node into your cursor location as a link.
 
 The node you want doesn't exist yet, and you want to create one with the title
 currently present in the Telescope search. This will drop the new node with
-unique filename into a `vault` folder in the workspace root.
-
-> [!NOTE]
-> TODO Change the vault folder default.
+unique filename into a `roam_base_directory` folder in the workspace root.
 
 ### Function
 
