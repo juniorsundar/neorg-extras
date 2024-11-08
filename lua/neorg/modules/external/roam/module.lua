@@ -164,7 +164,8 @@ module.public = {
 
 		if module.config.public.fuzzy_finder == "Telescope" then
 			-- Find all .norg files in the workspace
-			local norg_files_output = vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
+			local norg_files_output =
+				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
 			-- Extract titles and paths from the Neorg files
 			local title_path_pairs = {}
@@ -256,7 +257,8 @@ module.public = {
 			local titles = {}
 			local title_path_dict = {}
 
-			local norg_files_output = vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
+			local norg_files_output =
+				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
 			-- Extract titles and paths from the Neorg files
 			for _, line in pairs(norg_files_output) do
@@ -363,7 +365,12 @@ module.public = {
 		local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* |^\*\*\*\*\*\* "]]
 
 		-- Run ripgrep to find matching lines in .norg files
-		local rg_command = "rg " .. search_path .. " " .. "-g '*.norg' --with-filename --line-number '" .. base_directory .. "'"
+		local rg_command = "rg "
+			.. search_path
+			.. " "
+			.. "-g '*.norg' --with-filename --line-number '"
+			.. base_directory
+			.. "'"
 		local rg_results = vim.fn.system(rg_command)
 
 		if module.config.public.fuzzy_finder == "Telescope" then
@@ -662,7 +669,8 @@ module.public = {
 			.. "'"
 			.. " "
 			.. "-g '*.norg' --with-filename --line-number '"
-			.. base_directory .. "'"
+			.. base_directory
+			.. "'"
 		local rg_results = vim.fn.system(rg_command)
 
 		-- Process the ripgrep results to identify backlinks
