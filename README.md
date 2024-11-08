@@ -309,7 +309,7 @@ You can list out all possible Neorg task states:
 
 **Examples**
 
-`NeorgExtras Page undone pending` <- Will open agenda view with all pending
+`Neorg agenda page undone pending` <- Will open agenda view with all pending
 and undone tasks in current workspace.
 
 Tasks are currently segregated by the nodes they are found in. You can hit
