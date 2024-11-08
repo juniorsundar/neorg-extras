@@ -618,6 +618,7 @@ module.public = {
 					["default"] = {
 						function(selected, _)
 							module.required["core.dirman"].set_workspace(tostring(selected[1]))
+							vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
 						end,
 					},
 					["ctrl-i"] = {
