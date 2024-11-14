@@ -737,13 +737,13 @@ module.public = {
 					.. parsed_link.link_file_text
 					.. " | cut -d: -f1"
 				local row = tonumber(vim.fn.system(search):match("^%s*(.-)%s*$"))
-               			vim.cmd("bdelete!")
+				vim.cmd("bdelete!")
 				vim.cmd("edit +" .. row .. " " .. parsed_link.link_file_text)
 			else
-                		vim.cmd("bdelete!")
+				vim.cmd("bdelete!")
 				vim.cmd("edit " .. parsed_link.link_file_text)
 			end
-			
+
 			vim.api.nvim_buf_delete(module.public["buff-man"].buf, { force = true })
 			module.public["buff-man"].win = nil
 		end,
