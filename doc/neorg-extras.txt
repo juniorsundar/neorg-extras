@@ -1,4 +1,4 @@
-*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2024 November 06
+*neorg-extras.txt*              For              Last change: 2024 November 17
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -114,6 +114,8 @@ LAZY.NVIM                                *neorg-extras-installation-lazy.nvim*
                         config = {
                             fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
                             fuzzy_backlinks = false, -- Set to "true" for backlinks in fuzzy finder instead of buffer
+                            roam_base_directory = "" -- Directory in current workspace to store roam nodes
+                            node_name_randomiser = false -- Tokenise node name suffix for more randomisation
                         }
                     },
                 }
@@ -205,10 +207,8 @@ You want to insert the node into your cursor location as a link.
 
 The node you want doesn’t exist yet, and you want to create one with the
 title currently present in the Telescope search. This will drop the new node
-with unique filename into a `vault` folder in the workspace root.
+with unique filename into a `roam_base_directory` folder in the workspace root.
 
-
-  [!NOTE] TODO Change the vault folder default.
 
 FUNCTION ~
 
@@ -360,8 +360,8 @@ You can list out all possible Neorg task states:
 
 **Examples**
 
-`NeorgExtras Page undone pending` <- Will open agenda view with all pending and
-undone tasks in current workspace.
+`Neorg agenda page undone pending` <- Will open agenda view with all pending
+and undone tasks in current workspace.
 
 Tasks are currently segregated by the nodes they are found in. You can hit
 `<CR>` over the node names to navigate to those nodes as they are hyperlinks.

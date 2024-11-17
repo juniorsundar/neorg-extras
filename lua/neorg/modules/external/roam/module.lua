@@ -17,6 +17,7 @@ module.config.public = {
 	fuzzy_finder = "Telescope", -- or "Fzf"
 	fuzzy_backlinks = false,
 	roam_base_directory = "",
+	node_name_randomiser = false,
 }
 
 module.load = function()
@@ -153,6 +154,23 @@ module.public = {
 	-- This function scans Neorg files in the current workspace and allows the user to either insert
 	-- a selected node into the current buffer or create a new node.
 	node = function()
+		---Tokenise the name of a node
+		---@param node_name string
+		---@return string
+		local function name_tokeniser(node_name)
+			local title_token = node_name:gsub("%W", ""):lower()
+			local n = #title_token
+			if n > 5 then
+				local step = math.max(1, math.floor(n / 5))
+				local condensed = ""
+				for i = 1, n, step do
+					condensed = condensed .. title_token:sub(i, i)
+				end
+				title_token = condensed
+			end
+			return title_token
+		end
+
 		local fuzzy = module.private.get_fuzzy_finder_modules()
 		if not fuzzy then
 			vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
@@ -218,24 +236,21 @@ module.public = {
 						-- Map <C-n> to create a new node with the given title in the default note vault
 						map("i", "<C-n>", function()
 							local prompt = module.private.telescope_modules.state.get_current_line()
-							local title_token = prompt:gsub("%W", ""):lower()
-							local n = #title_token
-							if n > 5 then
-								local step = math.max(1, math.floor(n / 5))
-								local condensed = ""
-								for i = 1, n, step do
-									condensed = condensed .. title_token:sub(i, i)
-								end
-								title_token = condensed
-							end
+							local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt)
+								or prompt
 							module.private.telescope_modules.actions.close(prompt_bufnr)
 
 							-- Ensure the vault directory exists
-							local vault_dir = base_directory .. "/" .. module.config.public.roam_base_directory
+							local vault_dir = base_directory
+								.. (
+									module.config.public.roam_base_directory ~= ""
+										and "/" .. module.config.public.roam_base_directory
+									or ""
+								)
 							vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
-							vim.cmd("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+							vim.cmd("edit " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
 							vim.cmd([[Neorg inject-metadata]])
 
 							-- Update the title in the newly created buffer
@@ -312,23 +327,20 @@ module.public = {
 						function(_, opt)
 							-- Input query is in opt.__call_opts.query
 							local prompt = opt.__call_opts.query
-							local title_token = prompt:gsub("%W", ""):lower()
-							local n = #title_token
-							if n > 5 then
-								local step = math.max(1, math.floor(n / 5))
-								local condensed = ""
-								for i = 1, n, step do
-									condensed = condensed .. title_token:sub(i, i)
-								end
-								title_token = condensed
-							end
+							local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt)
+								or prompt
 
 							-- Ensure the vault directory exists
-							local vault_dir = base_directory .. "/" .. module.config.public.roam_base_directory
+							local vault_dir = base_directory
+								.. (
+									module.config.public.roam_base_directory ~= ""
+										and "/" .. module.config.public.roam_base_directory
+									or ""
+								)
 							vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
-							vim.cmd("new " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+							vim.cmd("edit " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
 							vim.cmd([[Neorg inject-metadata]])
 
 							-- Update the title in the newly created buffer
