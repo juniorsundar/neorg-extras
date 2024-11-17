@@ -150,26 +150,26 @@ module.private = {
 }
 
 module.public = {
-	-- Function to find and insert nodes from Neorg files.
-	-- This function scans Neorg files in the current workspace and allows the user to either insert
-	-- a selected node into the current buffer or create a new node.
-	node = function()
-		---Tokenise the name of a node
-		---@param node_name string
-		---@return string
-		local function name_tokeniser(node_name)
-			local title_token = node_name:gsub("%W", ""):lower()
-			local n = #title_token
-			if n > 5 then
-				local step = math.max(1, math.floor(n / 5))
-				local condensed = ""
-				for i = 1, n, step do
-					condensed = condensed .. title_token:sub(i, i)
-				end
-				title_token = condensed
-			end
-			return title_token
-		end
+    -- Function to find and insert nodes from Neorg files.
+    -- This function scans Neorg files in the current workspace and allows the user to either insert
+    -- a selected node into the current buffer or create a new node.
+    node = function()
+        ---Tokenise the name of a node
+        ---@param node_name string
+        ---@return string
+       local function name_tokeniser(node_name)
+            local title_token = node_name:gsub("%W", ""):lower()
+            local n = #title_token
+            if n > 5 then
+                local step = math.max(1, math.floor(n / 5))
+                local condensed = ""
+                for i = 1, n, step do
+                    condensed = condensed .. title_token:sub(i, i)
+                end
+                title_token = condensed
+            end
+            return title_token
+        end
 
 		local fuzzy = module.private.get_fuzzy_finder_modules()
 		if not fuzzy then
@@ -200,57 +200,53 @@ module.public = {
 			local opts = {}
 			opts.entry_maker = opts.entry_maker or module.private.telescope_modules.make_entry.gen_from_file(opts)
 
-			-- Set up Telescope picker to display and select Neorg files
-			module.private.telescope_modules.pickers
-				.new(opts, {
-					prompt_title = "Find Neorg Node",
-					finder = module.private.telescope_modules.finders.new_table({
-						results = title_path_pairs,
-						entry_maker = function(entry)
-							return {
-								value = entry[2],
-								display = entry[1],
-								ordinal = entry[1],
-							}
-						end,
-					}),
-					previewer = module.private.telescope_modules.conf.file_previewer(opts),
-					sorter = module.private.telescope_modules.conf.file_sorter(opts),
-					attach_mappings = function(prompt_bufnr, map)
-						-- Map <C-i> to insert the selected node into the current buffer
-						map("i", "<C-i>", function()
-							local entry = module.private.telescope_modules.state.get_selected_entry()
-							local current_file_path = entry.value
-							local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
-							local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
-							-- Insert at the cursor location
-							module.private.telescope_modules.actions.close(prompt_bufnr)
-							vim.api.nvim_put(
-								{ "{:$/" .. relative_path .. ":}[" .. entry.display .. "]" },
-								"",
-								false,
-								true
-							)
-						end)
+            -- Set up Telescope picker to display and select Neorg files
+            module.private.telescope_modules.pickers
+                .new(opts, {
+                    prompt_title = "Find Neorg Node",
+                    finder = module.private.telescope_modules.finders.new_table({
+                        results = title_path_pairs,
+                        entry_maker = function(entry)
+                            return {
+                                value = entry[2],
+                                display = entry[1],
+                                ordinal = entry[1],
+                            }
+                        end,
+                    }),
+                    previewer = module.private.telescope_modules.conf.file_previewer(opts),
+                    sorter = module.private.telescope_modules.conf.file_sorter(opts),
+                    attach_mappings = function(prompt_bufnr, map)
+                        -- Map <C-i> to insert the selected node into the current buffer
+                        map("i", "<C-i>", function()
+                            local entry = module.private.telescope_modules.state.get_selected_entry()
+                            local current_file_path = entry.value
+                            local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
+                            local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
+                            -- Insert at the cursor location
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
+                            vim.api.nvim_put(
+                                { "{:$/" .. relative_path .. ":}[" .. entry.display .. "]" },
+                                "",
+                                false,
+                                true
+                            )
+                        end)
 
-						-- Map <C-n> to create a new node with the given title in the default note vault
-						map("i", "<C-n>", function()
-							local prompt = module.private.telescope_modules.state.get_current_line()
-							local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt)
-								or prompt
-							module.private.telescope_modules.actions.close(prompt_bufnr)
+                        -- Map <C-n> to create a new node with the given title in the default note vault
+                        map("i", "<C-n>", function()
+                            local prompt = module.private.telescope_modules.state.get_current_line()
+                            local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt) or
+                            prompt
+                            module.private.telescope_modules.actions.close(prompt_bufnr)
 
-							-- Ensure the vault directory exists
-							local vault_dir = base_directory
-								.. (
-									module.config.public.roam_base_directory ~= ""
-										and "/" .. module.config.public.roam_base_directory
-									or ""
-								)
-							vim.fn.mkdir(vault_dir, "p")
+                            -- Ensure the vault directory exists
+                            local vault_dir = base_directory ..
+                            (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
+                            vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
-							vim.cmd("edit " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+							vim.cmd("new " .. vault_dir .. "/" .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
 							vim.cmd([[Neorg inject-metadata]])
 
 							-- Update the title in the newly created buffer
@@ -296,13 +292,13 @@ module.public = {
 				return self
 			end
 
-			function NodePreview:parse_entry(entry_str)
-				return {
-					path = title_path_dict[entry_str] == nil and entry_str or title_path_dict[entry_str],
-					line = 1,
-					col = 1,
-				}
-			end
+            function NodePreview:parse_entry(entry_str)
+                return {
+                    path = title_path_dict[entry_str] == nil and entry_str or title_path_dict[entry_str],
+                    line = 1,
+                    col = 1,
+                }
+            end
 
 			module.private.fzf_modules.fzf_lua.fzf_exec(titles, {
 				previewer = NodePreview,
@@ -331,14 +327,10 @@ module.public = {
 							local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt)
 								or prompt
 
-							-- Ensure the vault directory exists
-							local vault_dir = base_directory
-								.. (
-									module.config.public.roam_base_directory ~= ""
-										and "/" .. module.config.public.roam_base_directory
-									or ""
-								)
-							vim.fn.mkdir(vault_dir, "p")
+                            -- Ensure the vault directory exists
+                            local vault_dir = base_directory ..
+                            (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
+                            vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
 							vim.cmd("q")
