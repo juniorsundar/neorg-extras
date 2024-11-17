@@ -388,31 +388,31 @@ module.public = {
                 }
             end
 
-            module.private.fzf_modules.fzf_lua.fzf_exec(titles, {
-                previewer = NodePreview,
-                prompt = "Find Neorg Node> ",
-                actions = {
-                    ["default"] = {
-                        function(selected, _)
-                            vim.cmd("new " .. title_path_dict[selected[1]])
-                        end,
-                    },
-                    ["ctrl-i"] = {
-                        function(selected, _)
-                            local current_file_path = title_path_dict[selected[1]]
-                            local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
-                            local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
-                            -- Insert after the cursor location
-                            vim.cmd("q")
-                            vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. selected[1] .. "]" }, "", true, true)
-                        end,
-                    },
-                    ["ctrl-n"] = {
-                        function(_, opt)
-                            -- Input query is in opt.__call_opts.query
-                            local prompt = opt.__call_opts.query
-                            local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt) or
-                            prompt
+			module.private.fzf_modules.fzf_lua.fzf_exec(titles, {
+				previewer = NodePreview,
+				prompt = "Find Neorg Node> ",
+				actions = {
+					["default"] = {
+						function(selected, _)
+							vim.cmd("new " .. title_path_dict[selected[1]])
+						end,
+					},
+					["ctrl-i"] = {
+						function(selected, _)
+							local current_file_path = title_path_dict[selected[1]]
+							local escaped_base_path = base_directory:gsub("([^%w])", "%%%1")
+							local relative_path = current_file_path:match("^" .. escaped_base_path .. "/(.+)%..+")
+							-- Insert after the cursor location
+							vim.cmd("q")
+							vim.api.nvim_put({ "{:$/" .. relative_path .. ":}[" .. selected[1] .. "]" }, "", true, true)
+						end,
+					},
+					["ctrl-n"] = {
+						function(_, opt)
+							-- Input query is in opt.__call_opts.query
+							local prompt = opt.__call_opts.query
+							local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt)
+								or prompt
 
                             -- Ensure the vault directory exists
                             local vault_dir = base_directory ..
