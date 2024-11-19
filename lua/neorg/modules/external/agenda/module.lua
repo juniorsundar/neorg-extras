@@ -418,7 +418,7 @@ module.public = {
 				.. "-"
 				.. day
 				.. " == wk"
-				.. os.date("%U", os.time(timetable))
+				.. os.date("%U", os.time(timetable)) + 1
 		)
 		table.insert(buffer_lines, "___")
 		table.insert(buffer_lines, "")
