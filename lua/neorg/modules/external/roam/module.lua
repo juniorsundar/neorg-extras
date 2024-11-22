@@ -2,79 +2,79 @@ local neorg = require("neorg.core")
 local module = neorg.modules.create("external.roam")
 
 module.setup = function()
-	return {
-		success = true,
-		requires = {
-			"core.neorgcmd",
-			"core.dirman",
-			"core.integrations.treesitter",
-			"external.many-mans",
-		},
-	}
+    return {
+        success = true,
+        requires = {
+            "core.neorgcmd",
+            "core.dirman",
+            "core.integrations.treesitter",
+            "external.many-mans",
+        },
+    }
 end
 
 module.config.public = {
-	fuzzy_finder = "Telescope", -- or "Fzf"
-	fuzzy_backlinks = false,
-	roam_base_directory = "",
-	node_name_randomiser = false,
+    fuzzy_finder = "Telescope", -- or "Fzf"
+    fuzzy_backlinks = false,
+    roam_base_directory = "",
+    node_name_randomiser = false,
 }
 
 module.load = function()
-	module.required["core.neorgcmd"].add_commands_from_table({
-		["roam"] = {
-			args = 1,
-			subcommands = {
-				["node"] = {
-					min_args = 0,
-					name = "external.roam.node",
-				},
-				["block"] = {
-					args = 0,
-					name = "external.roam.block",
-				},
-				["backlinks"] = {
-					args = 0,
-					name = "external.roam.backlinks",
-				},
-				["select_workspace"] = {
-					args = 0,
-					name = "external.roam.select_workspace",
-				},
-				["capture"] = {
-					min_args = 1,
-					max_args = 2,
-					complete = {
-						{
-							"todo",
-							"note",
-							"meeting",
-							"selection",
-						},
-					},
-					name = "external.roam.capture",
-				},
-			},
-		},
-	})
+    module.required["core.neorgcmd"].add_commands_from_table({
+        ["roam"] = {
+            args = 1,
+            subcommands = {
+                ["node"] = {
+                    min_args = 0,
+                    name = "external.roam.node",
+                },
+                ["block"] = {
+                    args = 0,
+                    name = "external.roam.block",
+                },
+                ["backlinks"] = {
+                    args = 0,
+                    name = "external.roam.backlinks",
+                },
+                ["select_workspace"] = {
+                    args = 0,
+                    name = "external.roam.select_workspace",
+                },
+                ["capture"] = {
+                    min_args = 1,
+                    max_args = 2,
+                    complete = {
+                        {
+                            "todo",
+                            "note",
+                            "meeting",
+                            "selection",
+                        },
+                    },
+                    name = "external.roam.capture",
+                },
+            },
+        },
+    })
 end
 
 module.events.subscribed = {
-	["core.neorgcmd"] = {
-		["external.roam.node"] = true,
-		["external.roam.block"] = true,
-		["external.roam.backlinks"] = true,
-		["external.roam.select_workspace"] = true,
-		["external.roam.capture"] = true,
-	},
+    ["core.neorgcmd"] = {
+        ["external.roam.node"] = true,
+        ["external.roam.block"] = true,
+        ["external.roam.backlinks"] = true,
+        ["external.roam.select_workspace"] = true,
+        ["external.roam.capture"] = true,
+    },
 }
 
 module.private = {
 
-	default_capture_templates = {
-		["todo"] = [[]],
-		["note"] = [[]],
-		["meeting"] = [[
+    default_capture_templates = {
+        ["todo"] = [[]],
+        ["note"] = [[]],
+        ["meeting"] = [[
 * Meeting name
 
 ** Attendees
@@ -85,116 +85,116 @@ module.private = {
 
 ** Minutes
         ]],
-		["selection"] = [[]],
-	},
+        ["selection"] = [[]],
+    },
 
-	generate_default_capture_templates = function()
-		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
-		local dir_path = current_workspace .. "/.capture-templates"
+    generate_default_capture_templates = function()
+        local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+        local dir_path = current_workspace .. "/.capture-templates"
 
-		local ok, _, code = os.rename(dir_path, dir_path)
-		if not ok and code == 2 then
-			vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
-		end
+        local ok, _, code = os.rename(dir_path, dir_path)
+        if not ok and code == 2 then
+            vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
+        end
 
-		for key, value in pairs(module.private.default_capture_templates) do
-			local file_path = dir_path .. "/" .. key .. ".norg"
+        for key, value in pairs(module.private.default_capture_templates) do
+            local file_path = dir_path .. "/" .. key .. ".norg"
 
             local file = vim.fn.filereadable(file_path)
-			if file ~= 1 then
-				vim.cmd("edit " .. file_path)
-				vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(value, "\n"))
-				vim.cmd("w")
-				vim.cmd("bd")
-			end
-		end
-	end,
+            if file ~= 1 then
+                vim.cmd("edit " .. file_path)
+                vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(value, "\n"))
+                vim.cmd("w")
+                vim.cmd("bd")
+            end
+        end
+    end,
 
-	verify_default_capture_templates = function()
-		local function key_exists(key, table_of_strings)
-			for _, value in ipairs(table_of_strings) do
-				if value == key then
-					return true
-				end
-			end
-			return false
-		end
+    verify_default_capture_templates = function()
+        local function key_exists(key, table_of_strings)
+            for _, value in ipairs(table_of_strings) do
+                if value == key then
+                    return true
+                end
+            end
+            return false
+        end
 
-		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
-		local dir_path = current_workspace .. "/.capture-templates"
+        local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+        local dir_path = current_workspace .. "/.capture-templates"
 
-		local ok, _, code = os.rename(dir_path, dir_path)
-		if not ok and code == 2 then
-			return false
-		end
+        local ok, _, code = os.rename(dir_path, dir_path)
+        if not ok and code == 2 then
+            return false
+        end
 
-		local template_files = {}
-		for name, type in vim.fs.dir(dir_path) do
-			if type == "file" and name:match("%.norg$") then
-				local base_name = name:gsub("%.norg$", "")
-				table.insert(template_files, base_name)
-			end
-		end
+        local template_files = {}
+        for name, type in vim.fs.dir(dir_path) do
+            if type == "file" and name:match("%.norg$") then
+                local base_name = name:gsub("%.norg$", "")
+                table.insert(template_files, base_name)
+            end
+        end
 
-		for key, _ in pairs(module.private.default_capture_templates) do
-			if not key_exists(key, template_files) then
-				return false
-			end
-		end
+        for key, _ in pairs(module.private.default_capture_templates) do
+            if not key_exists(key, template_files) then
+                return false
+            end
+        end
 
-		return true
-	end,
+        return true
+    end,
 
-	get_fuzzy_finder_modules = function()
-		if module.config.public.fuzzy_finder == "Telescope" then
-			local success, _ = pcall(require, "telescope")
-			if not success then
-				return false
-			end
+    get_fuzzy_finder_modules = function()
+        if module.config.public.fuzzy_finder == "Telescope" then
+            local success, _ = pcall(require, "telescope")
+            if not success then
+                return false
+            end
 
-			module.private.telescope_modules = {
-				pickers = require("telescope.pickers"),
-				finders = require("telescope.finders"),
-				conf = require("telescope.config").values, -- Allows us to use the values from the user's config
-				make_entry = require("telescope.make_entry"),
-				actions = require("telescope.actions"),
-				actions_set = require("telescope.actions.set"),
-				state = require("telescope.actions.state"),
-			}
-			return true
-		elseif module.config.public.fuzzy_finder == "Fzf" then
-			local success, fzf_lua = pcall(require, "fzf-lua")
-			if not success then
-				return false
-			end
+            module.private.telescope_modules = {
+                pickers = require("telescope.pickers"),
+                finders = require("telescope.finders"),
+                conf = require("telescope.config").values, -- Allows us to use the values from the user's config
+                make_entry = require("telescope.make_entry"),
+                actions = require("telescope.actions"),
+                actions_set = require("telescope.actions.set"),
+                state = require("telescope.actions.state"),
+            }
+            return true
+        elseif module.config.public.fuzzy_finder == "Fzf" then
+            local success, fzf_lua = pcall(require, "fzf-lua")
+            if not success then
+                return false
+            end
 
-			module.private.fzf_modules = {
-				fzf_lua = fzf_lua,
-				previewer = require("fzf-lua.previewer"),
-				builtin_previewer = require("fzf-lua.previewer.builtin"),
-				actions = require("fzf-lua.actions"),
-			}
-			return true
-		else
-			return false
-		end
-	end,
+            module.private.fzf_modules = {
+                fzf_lua = fzf_lua,
+                previewer = require("fzf-lua.previewer"),
+                builtin_previewer = require("fzf-lua.previewer.builtin"),
+                actions = require("fzf-lua.actions"),
+            }
+            return true
+        else
+            return false
+        end
+    end,
 
-	---@param filename string
-	---@param lineno number?
-	---@return string|nil
-	get_heading_text = function(filename, lineno)
-		local file = io.open(filename, "r")
-		if not file then
-			print("Cannot open file:", filename)
-			return nil
-		end
+    ---@param filename string
+    ---@param lineno number?
+    ---@return string|nil
+    get_heading_text = function(filename, lineno)
+        local file = io.open(filename, "r")
+        if not file then
+            print("Cannot open file:", filename)
+            return nil
+        end
 
-		local file_content = file:read("*all")
-		file:close()
+        local file_content = file:read("*all")
+        file:close()
 
-		local tree = vim.treesitter.get_string_parser(file_content, "norg"):parse()[1]
-		local heading_query_string = [[
+        local tree = vim.treesitter.get_string_parser(file_content, "norg"):parse()[1]
+        local heading_query_string = [[
         (heading1
           title: (paragraph_segment) @paragraph_segment
         ) @heading1
@@ -220,21 +220,21 @@ module.private = {
         ) @heading6
         ]]
 
-		local heading_query = vim.treesitter.query.parse("norg", heading_query_string)
-		local target_line = lineno - 1
-		for _, node, _, _ in heading_query:iter_captures(tree:root(), file_content, 0, -1) do
-			local row1, _, row2, _ = node:range()
-			if row1 < lineno and row2 >= target_line then
-				for child in node:iter_children() do
-					local crow1, _, crow2, _ = child:range()
-					if child:type() == "paragraph_segment" and (crow1 < lineno and crow2 >= target_line) then
-						return (vim.treesitter.get_node_text(child, file_content))
-					end
-				end
-			end
-		end
-		return nil
-	end,
+        local heading_query = vim.treesitter.query.parse("norg", heading_query_string)
+        local target_line = lineno - 1
+        for _, node, _, _ in heading_query:iter_captures(tree:root(), file_content, 0, -1) do
+            local row1, _, row2, _ = node:range()
+            if row1 < lineno and row2 >= target_line then
+                for child in node:iter_children() do
+                    local crow1, _, crow2, _ = child:range()
+                    if child:type() == "paragraph_segment" and (crow1 < lineno and crow2 >= target_line) then
+                        return (vim.treesitter.get_node_text(child, file_content))
+                    end
+                end
+            end
+        end
+        return nil
+    end,
 }
 
 module.public = {
@@ -245,7 +245,7 @@ module.public = {
         ---Tokenise the name of a node
         ---@param node_name string
         ---@return string
-       local function name_tokeniser(node_name)
+        local function name_tokeniser(node_name)
             local title_token = node_name:gsub("%W", ""):lower()
             local n = #title_token
             if n > 5 then
@@ -259,19 +259,19 @@ module.public = {
             return title_token
         end
 
-		local fuzzy = module.private.get_fuzzy_finder_modules()
-		if not fuzzy then
-			vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
-			return nil
-		end
+        local fuzzy = module.private.get_fuzzy_finder_modules()
+        if not fuzzy then
+            vim.notify("No fuzzy finder present.", vim.log.levels.ERROR)
+            return nil
+        end
 
         local current_workspace = module.required["core.dirman"].get_current_workspace()
         local base_directory = current_workspace[2]
 
-		if module.config.public.fuzzy_finder == "Telescope" then
-			-- Find all .norg files in the workspace
-			local norg_files_output =
-				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
+        if module.config.public.fuzzy_finder == "Telescope" then
+            -- Find all .norg files in the workspace
+            local norg_files_output =
+                vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
             -- Extract titles and paths from the Neorg files
             local title_path_pairs = {}
@@ -325,17 +325,17 @@ module.public = {
                         map("i", "<C-n>", function()
                             local prompt = module.private.telescope_modules.state.get_current_line()
                             local title_token = module.config.public.node_name_randomiser and name_tokeniser(prompt) or
-                            prompt
+                                prompt
                             module.private.telescope_modules.actions.close(prompt_bufnr)
 
                             -- Ensure the vault directory exists
                             local vault_dir = base_directory ..
-                            (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
+                                (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
                             vim.fn.mkdir(vault_dir, "p")
 
-							-- Create and open a new Neorg file with the generated title token
-							vim.cmd("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
-							vim.cmd([[Neorg inject-metadata]])
+                            -- Create and open a new Neorg file with the generated title token
+                            vim.cmd("edit " .. vault_dir .. os.date("%Y%m%d%H%M%S-") .. title_token .. ".norg")
+                            vim.cmd([[Neorg inject-metadata]])
 
                             -- Update the title in the newly created buffer
                             local buf = vim.api.nvim_get_current_buf()
@@ -356,8 +356,8 @@ module.public = {
             local titles = {}
             local title_path_dict = {}
 
-			local norg_files_output =
-				vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
+            local norg_files_output =
+                vim.fn.systemlist("fd -e norg --type f --base-directory '" .. base_directory .. "'")
 
             -- Extract titles and paths from the Neorg files
             for _, line in pairs(norg_files_output) do
@@ -417,7 +417,7 @@ module.public = {
 
                             -- Ensure the vault directory exists
                             local vault_dir = base_directory ..
-                            (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
+                                (module.config.public.roam_base_directory ~= "" and "/" .. module.config.public.roam_base_directory or "")
                             vim.fn.mkdir(vault_dir, "p")
 
 							-- Create and open a new Neorg file with the generated title token
@@ -458,14 +458,14 @@ module.public = {
         -- Define search pattern for different levels of task blocks
         local search_path = [["^\* |^\*\* |^\*\*\* |^\*\*\*\* |^\*\*\*\*\* |^\*\*\*\*\*\* "]]
 
-		-- Run ripgrep to find matching lines in .norg files
-		local rg_command = "rg "
-			.. search_path
-			.. " "
-			.. "-g '*.norg' --with-filename --line-number '"
-			.. base_directory
-			.. "'"
-		local rg_results = vim.fn.system(rg_command)
+        -- Run ripgrep to find matching lines in .norg files
+        local rg_command = "rg "
+            .. search_path
+            .. " "
+            .. "-g '*.norg' --with-filename --line-number '"
+            .. base_directory
+            .. "'"
+        local rg_results = vim.fn.system(rg_command)
 
         if module.config.public.fuzzy_finder == "Telescope" then
             -- Process the ripgrep results
@@ -698,27 +698,27 @@ module.public = {
                 }
             end
 
-			module.private.fzf_modules.fzf_lua.fzf_exec(workspace_names, {
-				previewer = WorkspacePreview,
-				prompt = "Find Neorg Workspace> ",
-				actions = {
-					["default"] = {
-						function(selected, _)
-							module.required["core.dirman"].set_workspace(tostring(selected[1]))
-							vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
-						end,
-					},
-					["ctrl-i"] = {
-						function(selected, _)
-							module.required["core.dirman"].set_workspace(tostring(selected[1]))
-							vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
-							vim.cmd(":1")
-						end,
-					},
-				},
-			})
-		end
-	end,
+            module.private.fzf_modules.fzf_lua.fzf_exec(workspace_names, {
+                previewer = WorkspacePreview,
+                prompt = "Find Neorg Workspace> ",
+                actions = {
+                    ["default"] = {
+                        function(selected, _)
+                            module.required["core.dirman"].set_workspace(tostring(selected[1]))
+                            vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
+                        end,
+                    },
+                    ["ctrl-i"] = {
+                        function(selected, _)
+                            module.required["core.dirman"].set_workspace(tostring(selected[1]))
+                            vim.cmd("new " .. workspaces[selected[1]] .. "/index.norg")
+                            vim.cmd(":1")
+                        end,
+                    },
+                },
+            })
+        end
+    end,
 
     -- Function to find and display backlinks to the current Neorg file.
     -- This function searches for references to the current file in other Neorg files and lists them.
@@ -742,16 +742,16 @@ module.public = {
         end
         local search_path = "{:$/" .. relative_path .. ":"
 
-		-- Run ripgrep to find backlinks in other Neorg files
-		local rg_command = "rg --fixed-strings "
-			.. "'"
-			.. search_path
-			.. "'"
-			.. " "
-			.. "-g '*.norg' --with-filename --line-number '"
-			.. base_directory
-			.. "'"
-		local rg_results = vim.fn.system(rg_command)
+        -- Run ripgrep to find backlinks in other Neorg files
+        local rg_command = "rg --fixed-strings "
+            .. "'"
+            .. search_path
+            .. "'"
+            .. " "
+            .. "-g '*.norg' --with-filename --line-number '"
+            .. base_directory
+            .. "'"
+        local rg_results = vim.fn.system(rg_command)
 
         -- Process the ripgrep results to identify backlinks
         local self_title =
@@ -785,14 +785,14 @@ module.public = {
                         startrow = lineno - 3
                     end
 
-					local endrow = 0
-					local wc_out = vim.fn.system("wc -l '" .. file .. "'")
-					local linecount = tonumber(wc_out:match("^(%d+)"))
-					if lineno + 3 > linecount then
-						endrow = linecount
-					else
-						endrow = lineno + 3
-					end
+                    local endrow = 0
+                    local wc_out = vim.fn.system("wc -l '" .. file .. "'")
+                    local linecount = tonumber(wc_out:match("^(%d+)"))
+                    if lineno + 3 > linecount then
+                        endrow = linecount
+                    else
+                        endrow = lineno + 3
+                    end
 
                     table.insert(buffer_lines, "@code norg")
                     local curr_row = 0
@@ -906,14 +906,14 @@ module.public = {
         end
     end,
 
-	-- Function to create a capture buffer and append text to today's journal entry
-	---@param input_table table Template name and split kind
-	capture = function(input_table)
-		-- Search current workspace directory for a
-		-- Open a file in /tmp directory with name generated
-		-- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
-		-- Open capture buffer to that
-		local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
+    -- Function to create a capture buffer and append text to today's journal entry
+    ---@param input_table table Template name and split kind
+    capture = function(input_table)
+        -- Search current workspace directory for a
+        -- Open a file in /tmp directory with name generated
+        -- '/tmp/' .. os.date("%Y%m%d%H%M%S") .. 'capture_type' .. '.norg'
+        -- Open capture buffer to that
+        local current_workspace = module.required["core.dirman"].get_current_workspace()[2]
 
         -- First check if default templates are populated
         local templates_present = module.private.verify_default_capture_templates()
@@ -921,50 +921,52 @@ module.public = {
             module.private.generate_default_capture_templates()
         end
 
-		-- If input is a custom template, check if that exists
+        -- If input is a custom template, check if that exists
         local template_path = current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg"
-		local template_exists = vim.fn.filereadable(template_path)
-		if template_exists ~= 1 then
-			vim.notify(
-				"Template " .. input_table['template'] .. ".norg does not exist in $workspace/.capture-templates folder",
-				vim.log.levels.WARN
-			)
+        local template_exists = vim.fn.filereadable(template_path)
+        if template_exists ~= 1 then
+            vim.notify(
+                "Template " .. input_table['template'] .. ".norg does not exist in $workspace/.capture-templates folder",
+                vim.log.levels.WARN
+            )
 
-			local ok, _, code =
-				os.rename(current_workspace .. "/.capture-templates", current_workspace .. "/.capture-templates")
-			if not ok and code == 2 then
-				vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
-			end
+            local ok, _, code =
+                os.rename(current_workspace .. "/.capture-templates", current_workspace .. "/.capture-templates")
+            if not ok and code == 2 then
+                vim.fn.mkdir(current_workspace .. "/.capture-templates", "p")
+            end
 
-			vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg")
-			vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
-			return
-		end
+            vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg")
+            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
+            return
+        end
 
-		if input_table['template'] ~= "selection" then
+        if input_table['template'] ~= "selection" then
             local lines = vim.fn.readfile(template_path)
-            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines, input_table['kind'])
-		-- else
-		end
-	end,
+            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines, input_table['kind'], input_table['template'])
+        else
+            local lines = vim.fn.readfile(template_path)
+            module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines, input_table['kind'], input_table['template'])
+        end
+    end,
 }
 
 module.on_event = function(event)
-	if event.split_type[2] == "external.roam.node" then
-		module.public.node()
-	elseif event.split_type[2] == "external.roam.block" then
-		module.public.block()
-	elseif event.split_type[2] == "external.roam.backlinks" then
-		module.public.backlinks()
-	elseif event.split_type[2] == "external.roam.select_workspace" then
-		module.public.workspace_selector()
-	elseif event.split_type[2] == "external.roam.capture" then
+    if event.split_type[2] == "external.roam.node" then
+        module.public.node()
+    elseif event.split_type[2] == "external.roam.block" then
+        module.public.block()
+    elseif event.split_type[2] == "external.roam.backlinks" then
+        module.public.backlinks()
+    elseif event.split_type[2] == "external.roam.select_workspace" then
+        module.public.workspace_selector()
+    elseif event.split_type[2] == "external.roam.capture" then
         local input_table = {
-            template = event.content[1], -- Template name
+            template = event.content[1],                                             -- Template name
             kind = #event.content > 1 and event.content[2]:match("=(.+)") or "split" -- Split kind
         }
-		module.public.capture(input_table)
-	end
+        module.public.capture(input_table)
+    end
 end
 
 return module
