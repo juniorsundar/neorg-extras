@@ -14,6 +14,7 @@ module.setup = function()
             "core.dirman",
             "core.qol.todo_items",
             "core.esupports.hop",
+            "core.journal",
         },
     }
 end
@@ -79,8 +80,35 @@ module.private = {
         return node_tree
     end,
 
-    find_capture_target_node_in_file = function(file)
-    end,
+    -- Search for a pattern in the current buffer
+    search_pattern = function(pattern, options)
+        options = options or {}
+        options.forward = options.forward or true  -- Search forward by default
+        options.wrap = options.wrap or true      -- Wrap around the end of the buffer
+        options.case_sensitive = options.case_sensitive or true
+
+        local search_direction = options.forward and '/' or '?'
+        local search_command = string.format('%s%s', search_direction, pattern)
+
+        -- Set search options
+        if not options.wrap then
+            vim.cmd('set nowrapscan')
+        end
+        if not options.case_sensitive then
+            vim.cmd('set ignorecase')
+        end
+        vim.cmd(search_command)
+
+        -- Get the line number of the match
+        local line_number = vim.fn.line('.')
+
+        -- Check if pattern was found
+        if line_number == 0 then
+            return -1
+        else
+            return line_number
+        end
+    end
 }
 
 module.public = {
@@ -779,15 +807,57 @@ module.public = {
         end,
 
         write_capture_to_journal = function(capture_kind)
+            local function format_capture_text(text)
+                -- Convert to lowercase and capitalize the first letter
+                local formatted_text = text:lower():gsub("^%l", string.upper)
+
+                -- Replace underscores with spaces
+                formatted_text = formatted_text:gsub("_", " ")
+
+                -- Capitalize the first letter of each word
+                formatted_text = formatted_text:gsub("(%w[%w]*)", function(word)
+                    return word:sub(1, 1):upper() .. word:sub(2)
+                end)
+
+                return formatted_text
+            end
+
             -- Get the content of the buffer as a list of lines
             local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, true)
+            vim.cmd("q!")
 
             -- Join the lines with newlines to create a string
-            local content = table.concat(lines, "\n")
+            -- local content = table.concat(lines, "\n")
 
-            -- Write the content to the register 'a'
-            vim.fn.setreg('n', content)
-            vim.cmd("bdelete!")
+            -- TODO When the module exposes function to public make sure to change this
+            -- module.required["core.journal"].diary_today()
+            require("neorg.modules.core.journal.module")["private"].diary_today()
+
+            -- Process:
+            -- - Search for heading under Capture Kind in current buffer
+            -- -- If exists then paste the content in a level underneath it (after elevating)
+            -- -- If it doesn't exist then paste content with a new heading.
+
+            local capture_heading = format_capture_text(capture_kind)
+            local position = module.private.search_pattern("* " .. capture_heading)
+            vim.notify(tostring(position), vim.log.levels.INFO)
+
+            local promoted_lines = {}
+            -- Iterate over each line in the input table.
+            for i, line in ipairs(lines) do
+                promoted_lines[i] = line:gsub("^(%*+)", function(match)
+                    return match .. "*"
+                end)
+            end
+            local heading_name = ""
+            if position == -1 then
+                heading_name = '* ' .. capture_kind:gsub("^%l", string.upper)
+            end
+            table.insert(promoted_lines, 1, heading_name)
+            local content = table.concat(promoted_lines, "\n")
+
+            vim.api.nvim_buf_set_lines(vim.api.nvim_get_current_buf(), position, position, true, promoted_lines)
+            vim.fn.setreg("n", content)
         end,
 
         --- Standard buffer to display agendas
@@ -899,7 +969,7 @@ module.public = {
             -- vim.api.nvim_command(split_kind)
             --
             -- vim.cmd("edit /tmp/" .. capture_kind .. ".norg")
-            vim.cmd(split_kind .. " /tmp/" .. capture_kind .. ".norg")
+            vim.cmd(split_kind .. " /tmp/" .. capture_kind .. os.date("%H%M%S") ..".norg")
             module.public["buff-man"].buf = vim.api.nvim_get_current_buf()
             module.public["buff-man"].win = vim.api.nvim_get_current_win()
             vim.api.nvim_win_set_buf(module.public["buff-man"].win, module.public["buff-man"].buf)
