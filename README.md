@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://i.imgur.com/iikItr5.png" width=300>
+<img src="https://i.imgur.com/20X5DNx.png" width=300>
 
 # NeorgExtras
 
