@@ -1,6 +1,9 @@
 name: Linting and style checking
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
