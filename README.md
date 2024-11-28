@@ -2,7 +2,7 @@
 
 <img src="https://i.imgur.com/20X5DNx.png" width=300>
 
-# NeorgExtras
+# [Neorg](https://github.com/nvim-neorg/neorg)Extras
 
 Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
 
@@ -65,7 +65,7 @@ Highly opinionated Neorg add-on to streamline organising your life in plain-text
 
 # Installation
 
-This works alongside your [Neorg](https://github.com/nvim-neorg/neorg) installation.
+This works alongside your [Neorg](https://github.com/andreadev-it/neorg-module-tutorials/blob/main/introduction.md#adding-it-to-neorg) installation.
 
 ## `lazy.nvim`
 
@@ -129,7 +129,7 @@ is something way down in the future after I have implemented the required basic
 features. So, for the moment, users of this plugin will have to bear with this
 dependency.
 
-Also note that there are a lot of similarities in this plugin with [`nvim-neorg/neorg-telescope`](https://github.com/nvim-telescope/telescope.nvim).
+Also note that there are a lot of similarities in this plugin with [`nvim-neorg/neorg-telescope`](https://github.com/nvim-neorg/neorg-telescope).
 It implements these features much better than I do, and more cleanly that I do.
 If you are comfortable using that, then you can install it along side this
 plugin and simply skip the Neorg-Roam feature-set.
