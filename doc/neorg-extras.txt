@@ -1,4 +1,4 @@
-*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2024 November 23
+*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2024 November 28
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -77,7 +77,8 @@ Table of Contents                             *neorg-extras-table-of-contents*
 ==============================================================================
 2. Installation                                    *neorg-extras-installation*
 
-This works alongside your Neorg <https://github.com/nvim-neorg/neorg>
+This works alongside your Neorg
+<https://github.com/andreadev-it/neorg-module-tutorials/blob/main/introduction.md#adding-it-to-neorg>
 installation.
 
 
@@ -148,11 +149,10 @@ implemented the required basic features. So, for the moment, users of this
 plugin will have to bear with this dependency.
 
 Also note that there are a lot of similarities in this plugin with
-`nvim-neorg/neorg-telescope`
-<https://github.com/nvim-telescope/telescope.nvim>. It implements these
-features much better than I do, and more cleanly that I do. If you are
-comfortable using that, then you can install it along side this plugin and
-simply skip the Neorg-Roam feature-set.
+`nvim-neorg/neorg-telescope` <https://github.com/nvim-neorg/neorg-telescope>.
+It implements these features much better than I do, and more cleanly that I do.
+If you are comfortable using that, then you can install it along side this
+plugin and simply skip the Neorg-Roam feature-set.
 
 
 SET WORKSPACE                          *neorg-extras-neorg-roam-set-workspace*
