@@ -937,7 +937,8 @@ module.public = {
             end
 
             vim.cmd("edit " .. current_workspace .. "/.capture-templates/" .. input_table['template'] .. ".norg")
-            vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split("/insert template text, then save/ \n", "\n"))
+            vim.api.nvim_buf_set_lines(0, 0, 0, false, vim.split("/insert template text, then save `:wq` to create new template./ \n", "\n"))
+            vim.api.nvim_buf_set_lines(0, 1, 1, false, vim.split("/Then recall `Neorg roam capture <new-template>` to create new capture./ \n", "\n"))
             return
         end
 
