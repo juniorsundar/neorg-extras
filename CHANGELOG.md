@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/juniorsundar/neorg-extras/compare/v0.5.1...v0.6.0) (2024-12-12)
+
+
+### Features
+
+* **roam:** Can set `roam_base_directory` instead of default `vault` ([8da3083](https://github.com/juniorsundar/neorg-extras/commit/8da30833b9d535580a1cc71198e05c4db34f5821))
+
+
+### Bug Fixes
+
+* **buff-man:** Properly deleting new tab with task view ([9bc1511](https://github.com/juniorsundar/neorg-extras/commit/9bc1511c3b3e77cfb88dabaa5b07857b372d1bad))
+* **documentation:** Removing some old commands ([1ac654a](https://github.com/juniorsundar/neorg-extras/commit/1ac654aa82d8219430acaf7fd33d3a35b67f8c67))
+* **fzf-lua:** `&lt;C-n&gt;` wasn't properly closing fzf prompt ([#50](https://github.com/juniorsundar/neorg-extras/issues/50)) ([88f27d6](https://github.com/juniorsundar/neorg-extras/commit/88f27d6ca7bb866665e9b2104abdb7fb1e138742))
+* **fzf-lua:** Interruption when selecting workspace ([d1d9618](https://github.com/juniorsundar/neorg-extras/commit/d1d9618115cd6775d76770db6610db7b942e3c95))
+* **roam_base_directory:** Edge case when ~= "" ([ab6d590](https://github.com/juniorsundar/neorg-extras/commit/ab6d5906bbc88ca49430294d8acd66a69e14ac59))
+* Spaces in files/folder/node names effects search ([e262d81](https://github.com/juniorsundar/neorg-extras/commit/e262d81ddb4a40cbf735243efec8635befe28406))
+* **week-number:** Was one less than it was supposed to ([512462e](https://github.com/juniorsundar/neorg-extras/commit/512462ed8721ecc111d8cb23d9d49e3b6617f23c))
+
 ## [0.5.1](https://github.com/juniorsundar/neorg-extras/compare/v0.5.0...v0.5.1) (2024-11-07)
 
 
