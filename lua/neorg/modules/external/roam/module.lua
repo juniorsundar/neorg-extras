@@ -310,7 +310,8 @@ module.public = {
 				actions = {
 					["default"] = {
 						function(selected, _)
-							vim.cmd("new " .. title_path_dict[selected[1]])
+							vim.cmd("q")
+							vim.cmd("edit " .. title_path_dict[selected[1]])
 						end,
 					},
 					["ctrl-i"] = {
