@@ -829,9 +829,8 @@ module.public = {
             -- Join the lines with newlines to create a string
             -- local content = table.concat(lines, "\n")
 
-            -- TODO When the module exposes function to public make sure to change this
-            -- module.required["core.journal"].diary_today()
-            require("neorg.modules.core.journal.module")["private"].diary_today()
+            module.required["core.journal"].diary_today()
+            -- require("neorg.modules.core.journal.module")["private"].diary_today()
 
             -- Process:
             -- - Search for heading under Capture Kind in current buffer
