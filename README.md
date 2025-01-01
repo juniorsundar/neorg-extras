@@ -258,6 +258,56 @@ You want to determine all backlinks to current node, preview them, and navigate 
 |----------|-------------------------------------------------------------------------------|
 | `<CR>`   | Open to selected backlink location.                                           |
 
+## Capture
+
+### Rationale
+
+Its common to forgot things. Just so you don't, why not capture it?
+
+Capturing shouldn't be difficult, it should be accessible from anywhere. And
+getting the captured information shouldn't be difficult either.
+
+### Use-Case
+
+There are two primary types of use-cases:
+1. Capturing idea/task/content
+2. Capturing annotation
+
+**In case (1)**
+You are working and suddenly remember a task you need to accomplish. Simply
+call `Neorg roam capture todo`. This will open a temporary buffer where you
+can capture the task. Once closed, it will append this content into your daily
+journal for the day.
+
+**In case (2)**
+There's a really cool code snippet that you want to use at a later time. Simply
+select the range in "visual" mode and call `'<,'>Neorg roam capture selection`. 
+Annotate as you wish and close the buffer. It will be appended into your daily
+journal for the day.
+
+### Function
+
+`Neorg roam capture <anything>`
+
+> [!NOTE]
+> The following functions are templated. The templates are generated in
+> "<WORKSPACE_ROOT>/.capture-templates".
+> `Neorg roam capture todo`
+> `Neorg roam capture note`
+> `Neorg roam capture meeting`
+> `Neorg roam capture selection`
+> 
+> You can add more templates into this directory.
+
+### Default Mappings
+
+In the capture buffer.
+
+| Mappings     | Action                                   |
+|--------------|------------------------------------------|
+| `<C-c><C-c>` | Commit captured content to daily journal.|
+| `q`          | Close capture buffer and delete content. |
+
 # Neorg-Agenda
 
 In order to organise your life in plain-text, you need to be able to open up
