@@ -964,7 +964,7 @@ module.public = {
             local path_str = vim.fn.expand('%:p')
             local filename_str = vim.fn.expand('%:t')
             local hostname_str = vim.fn.hostname()
-            local heading_str = "* Clipped from {:" .. path_str .. ":" .. start_row .. "}[" .. filename_str .. "] @ " .. hostname_str
+            local heading_str = "* Clipped from {/ " .. path_str .. ":" .. start_row .. "}[" .. filename_str .. "] @hostname:" .. hostname_str
             table.insert(lines, 1, heading_str)
             table.insert(lines, 1, "")
 
