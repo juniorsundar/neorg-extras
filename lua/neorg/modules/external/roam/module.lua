@@ -713,14 +713,14 @@ module.public = {
 					["default"] = {
 						function(selected, _)
 							module.required["core.dirman"].set_workspace(tostring(selected[1]))
-                            vim.cmd(":q")
+							vim.cmd(":q")
 							vim.cmd("edit " .. workspaces[selected[1]] .. "/index.norg")
 						end,
 					},
 					["ctrl-i"] = {
 						function(selected, _)
 							module.required["core.dirman"].set_workspace(tostring(selected[1]))
-                            vim.cmd(":q")
+							vim.cmd(":q")
 							vim.cmd("edit " .. workspaces[selected[1]] .. "/index.norg")
 							vim.cmd(":1")
 						end,
