@@ -807,7 +807,6 @@ module.public = {
             local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, true)
             vim.cmd("q!")
 
-
             module.required["core.journal"].diary_today()
             -- require("neorg.modules.core.journal.module")["private"].diary_today()
 

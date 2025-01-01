@@ -942,8 +942,33 @@ module.public = {
             return
         end
 
-        if input_table['template'] ~= "selection" then
-            local lines = vim.fn.readfile(template_path)
+        if input_table['template'] == "selection" then
+            local start_row, start_col = vim.fn.line("'<"), vim.fn.col("'<")
+            local end_row, end_col = vim.fn.line("'>"), vim.fn.col("'>")
+            -- If the selection is reversed, swap the start and end positions
+            if start_row > end_row or (start_row == end_row and start_col > end_col) then
+                start_row, start_col, end_row, end_col = end_row, end_col, start_row, start_col
+            end
+
+            local lines = vim.api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+
+            lines[1] = string.sub(lines[1], start_col)
+            lines[#lines] = string.sub(lines[#lines], 1, end_col)
+
+            -- Add code block
+            table.insert(lines, 1, "@code " .. vim.bo.filetype)
+            table.insert(lines, "@end")
+            table.insert(lines, 1, "")
+
+            -- Add heading and hyperlink
+            local path_str = vim.fn.expand('%:p')
+            local filename_str = vim.fn.expand('%:t')
+            local hostname_str = vim.fn.hostname()
+            local heading_str = "* Clipped from {:" .. path_str .. ":" .. start_row .. "}[" .. filename_str .. "] @ " .. hostname_str
+            table.insert(lines, 1, heading_str)
+            table.insert(lines, 1, "")
+
+            -- local lines = vim.fn.readfile(template_path)
             module.required["external.many-mans"]["buff-man"].create_capture_buffer(lines, input_table['kind'], input_table['template'])
         else
             local lines = vim.fn.readfile(template_path)
