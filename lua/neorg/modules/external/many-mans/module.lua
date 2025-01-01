@@ -81,33 +81,14 @@ module.private = {
     end,
 
     -- Search for a pattern in the current buffer
-    search_pattern = function(pattern, options)
-        options = options or {}
-        options.forward = options.forward or true  -- Search forward by default
-        options.wrap = options.wrap or true      -- Wrap around the end of the buffer
-        options.case_sensitive = options.case_sensitive or true
-
-        local search_direction = options.forward and '/' or '?'
-        local search_command = string.format('%s%s', search_direction, pattern)
-
-        -- Set search options
-        if not options.wrap then
-            vim.cmd('set nowrapscan')
+    search_pattern = function(pattern)
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+        for i, line in ipairs(lines) do
+            if string.find(line, pattern) then
+                return i
+            end
         end
-        if not options.case_sensitive then
-            vim.cmd('set ignorecase')
-        end
-        vim.cmd(search_command)
-
-        -- Get the line number of the match
-        local line_number = vim.fn.line('.')
-
-        -- Check if pattern was found
-        if line_number == 0 then
-            return -1
-        else
-            return line_number
-        end
+        return -1
     end
 }
 
@@ -826,8 +807,6 @@ module.public = {
             local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, true)
             vim.cmd("q!")
 
-            -- Join the lines with newlines to create a string
-            -- local content = table.concat(lines, "\n")
 
             module.required["core.journal"].diary_today()
             -- require("neorg.modules.core.journal.module")["private"].diary_today()
