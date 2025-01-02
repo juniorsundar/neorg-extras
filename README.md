@@ -62,8 +62,9 @@ return {
                     config = {
                         fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
                         fuzzy_backlinks = false, -- Set to "true" for backlinks in fuzzy finder instead of buffer
-                        roam_base_directory = "" -- Directory in current workspace to store roam nodes
-                        node_name_randomiser = false -- Tokenise node name suffix for more randomisation
+                        roam_base_directory = "", -- Directory in current workspace to store roam nodes
+                        node_name_randomiser = false, -- Tokenise node name suffix for more randomisation
+                        node_name_snake_case = false, -- snake_case the names if node_name_randomiser = false
                     }
                 },
             }
