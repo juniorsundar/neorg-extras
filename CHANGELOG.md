@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/juniorsundar/neorg-extras/compare/v0.6.0...v0.7.0) (2025-01-02)
+
+
+### Features
+
+* **node:** Autogen names can be snake_cased (default: false) ([#51](https://github.com/juniorsundar/neorg-extras/issues/51)) ([ec20393](https://github.com/juniorsundar/neorg-extras/commit/ec20393536bdda5bc7e834f28a401c08c51c1cad))
+
+
+### Bug Fixes
+
+* **fzf-lua:** Opening blocks+backlinks hang prompt ([868da79](https://github.com/juniorsundar/neorg-extras/commit/868da79e6e1e3ab9e3a7e6175cbc4713ec06359d))
+
 ## [0.6.0](https://github.com/juniorsundar/neorg-extras/compare/v0.5.1...v0.6.0) (2025-01-01)
 
 
