@@ -607,7 +607,8 @@ module.public = {
 				actions = {
 					["default"] = {
 						function(selected, _)
-							vim.cmd("new " .. text_string_matches_dict[selected[1]]["file"])
+                            vim.cmd("q")
+							vim.cmd("edit " .. text_string_matches_dict[selected[1]]["file"])
 							vim.cmd(":" .. text_string_matches_dict[selected[1]]["line"])
 						end,
 					},
@@ -917,7 +918,8 @@ module.public = {
 					actions = {
 						["default"] = {
 							function(selected, _)
-								vim.cmd("new " .. backlink_text_matches_dict[selected[1]]["file"])
+                                vim.cmd("q")
+								vim.cmd("edit " .. backlink_text_matches_dict[selected[1]]["file"])
 								vim.cmd(":" .. backlink_text_matches_dict[selected[1]]["line"])
 							end,
 						},
