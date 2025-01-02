@@ -18,7 +18,7 @@ module.config.public = {
 	fuzzy_backlinks = false,
 	roam_base_directory = "",
 	node_name_randomiser = false,
-    node_name_snake_case = false,
+	node_name_snake_case = false,
 }
 
 module.load = function()
@@ -325,13 +325,13 @@ module.public = {
 						-- Map <C-n> to create a new node with the given title in the default note vault
 						map("i", "<C-n>", function()
 							local prompt = module.private.telescope_modules.state.get_current_line()
-                            local title_token = prompt
-                            if module.config.public.node_name_randomiser then
-                                title_token = name_tokeniser(prompt)
-                            elseif module.config.public.node_name_snake_case then
-                                title_token = title_token:lower()
-                                title_token = title_token:gsub(" ", "_")
-                            end
+							local title_token = prompt
+							if module.config.public.node_name_randomiser then
+								title_token = name_tokeniser(prompt)
+							elseif module.config.public.node_name_snake_case then
+								title_token = title_token:lower()
+								title_token = title_token:gsub(" ", "_")
+							end
 							module.private.telescope_modules.actions.close(prompt_bufnr)
 
 							-- Ensure the vault directory exists
@@ -422,13 +422,13 @@ module.public = {
 						function(_, opt)
 							-- Input query is in opt.__call_opts.query
 							local prompt = opt.__call_opts.query
-                            local title_token = prompt
-                            if module.config.public.node_name_randomiser then
-                                title_token = name_tokeniser(prompt)
-                            elseif module.config.public.node_name_snake_case then
-                                title_token = title_token:lower()
-                                title_token = title_token:gsub(" ", "_")
-                            end
+							local title_token = prompt
+							if module.config.public.node_name_randomiser then
+								title_token = name_tokeniser(prompt)
+							elseif module.config.public.node_name_snake_case then
+								title_token = title_token:lower()
+								title_token = title_token:gsub(" ", "_")
+							end
 
 							-- Ensure the vault directory exists
 							local vault_dir = base_directory
