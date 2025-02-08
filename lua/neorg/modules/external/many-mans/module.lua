@@ -582,9 +582,9 @@ module.public = {
 			return task
 		end,
 
-		filter_tasks = function(input_list)
+		filter_tasks = function(input_list, base_directory)
 			local blacklisted_state_icons = module.public["task-man"].blacklist_states(input_list)
-			local base_directory = module.required["core.dirman"].get_current_workspace()[2]
+			if base_directory == nil then base_directory = module.required["core.dirman"].get_current_workspace()[2] end
 			local lines = module.public["task-man"].find_tasks_in_workspace(base_directory)
 
 			-- Filter and map tasks
