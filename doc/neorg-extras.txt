@@ -1,4 +1,4 @@
-*neorg-extras.txt*              For               Last change: 2025 January 01
+*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2025 February 08
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -76,8 +76,9 @@ LAZY.NVIM                                *neorg-extras-installation-lazy.nvim*
                         config = {
                             fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
                             fuzzy_backlinks = false, -- Set to "true" for backlinks in fuzzy finder instead of buffer
-                            roam_base_directory = "" -- Directory in current workspace to store roam nodes
-                            node_name_randomiser = false -- Tokenise node name suffix for more randomisation
+                            roam_base_directory = "", -- Directory in current workspace to store roam nodes
+                            node_name_randomiser = false, -- Tokenise node name suffix for more randomisation
+                            node_name_snake_case = false, -- snake_case the names if node_name_randomiser = false
                         }
                     },
                 }
