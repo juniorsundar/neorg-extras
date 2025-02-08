@@ -14,7 +14,7 @@ module.setup = function()
 end
 
 module.config.public = {
-	workspace = nil
+	workspace = nil,
 }
 
 module.load = function()
@@ -431,7 +431,9 @@ module.public = {
 
 		local workspace = module.required["core.dirman"].get_workspace(module.config.public.workspace)
 		local base_directory
-		if workspace ~= nil then base_directory = workspace:tostring() end
+		if workspace ~= nil then
+			base_directory = workspace:tostring()
+		end
 		local task_list = module.required["external.many-mans"]["task-man"].filter_tasks({
 			"undone",
 			"pending",
