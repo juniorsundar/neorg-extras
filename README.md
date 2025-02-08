@@ -57,7 +57,11 @@ return {
                     }
                 },
                 -- OPTIONAL
-                ["external.agenda"] = {},
+                ["external.agenda"] = {
+                    config = {
+                        workspace = nil, -- or set to "tasks_workspace" to limit agenda search to just that workspace
+                    }
+                },
                 ["external.roam"] = {
                     config = {
                         fuzzy_finder = "Telescope", -- OR "Fzf" ... Defaults to "Telescope"
