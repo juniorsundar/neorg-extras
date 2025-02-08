@@ -6,11 +6,16 @@ module.setup = function()
 		success = true,
 		requires = {
 			"core.neorgcmd",
+			"core.dirman",
 			"core.integrations.treesitter",
 			"external.many-mans",
 		},
 	}
 end
+
+module.config.public = {
+	workspace = nil
+}
 
 module.load = function()
 	module.required["core.neorgcmd"].add_commands_from_table({
@@ -424,13 +429,16 @@ module.public = {
 		table.insert(buffer_lines, "")
 		table.insert(buffer_lines, "")
 
+		local workspace = module.required["core.dirman"].get_workspace(module.config.public.workspace)
+		local base_directory
+		if workspace ~= nil then base_directory = workspace:tostring() end
 		local task_list = module.required["external.many-mans"]["task-man"].filter_tasks({
 			"undone",
 			"pending",
 			"hold",
 			"important",
 			"ambiguous",
-		})
+		}, base_directory)
 
 		local today = {}
 		local overdue = {}
