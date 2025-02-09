@@ -892,6 +892,38 @@ module.public = {
                     },
                 },
             })
+        elseif module.config.public.fuzzy_finder == "Snacks" then
+            local get_workspaces = function()
+                local item = {}
+                for i in pairs(workspace_names) do
+                    table.insert(item, { text = workspace_names[i], file = tostring(workspaces[workspace_names[i]])})
+                end
+                return item
+            end
+            module.private.snacks_modules.picker.pick({
+                source = "neorg_workspaces",
+                items = get_workspaces(),
+                format = "text",
+                preview = "file",
+                confirm = function(picker, item)
+                    picker:close()
+                    module.required["core.dirman"].set_workspace(item.text)
+                end,
+                actions = {
+                    open_index = function(picker, item)
+                        picker:close()
+                        vim.cmd("edit " .. workspaces[item.text] .. "/index.norg")
+                        vim.cmd(":1")
+                    end,
+                },
+                win = {
+                    input = {
+                        keys = {
+                            ["<C-i>"] = { "open_index", mode = { "n", "i" }, desc = "Open Workspace Index" },
+                        }
+                    }
+                }
+            })
         end
     end,
 
