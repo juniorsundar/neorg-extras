@@ -20,6 +20,26 @@
 * release 0.6.1 ([1bbb56b](https://github.com/juniorsundar/neorg-extras/commit/1bbb56bc8dbba73288e93106581fb93784d1c293))
 * release 0.7.0 ([3a56160](https://github.com/juniorsundar/neorg-extras/commit/3a56160375c6c87de7201684df06d6a5769e7fc7))
 
+## [0.7.0](https://github.com/juniorsundar/neorg-extras/compare/v0.6.0...v0.7.0) (2025-02-09)
+
+
+### Features
+
+* **agenda:** Add `workspace` option for neorg-agenda ([#53](https://github.com/juniorsundar/neorg-extras/issues/53)) ([19102d0](https://github.com/juniorsundar/neorg-extras/commit/19102d07b067cca7b92dd37aad0be3adf23f4b30))
+* **node:** Autogen names can be snake_cased (default: false) ([#51](https://github.com/juniorsundar/neorg-extras/issues/51)) ([ec20393](https://github.com/juniorsundar/neorg-extras/commit/ec20393536bdda5bc7e834f28a401c08c51c1cad))
+* **roam:** Support for `snacks.picker` in Roam ([#54](https://github.com/juniorsundar/neorg-extras/issues/54)) ([d2ae729](https://github.com/juniorsundar/neorg-extras/commit/d2ae7290159e7bdfcb5aab483d3f59b242e7e914))
+
+
+### Bug Fixes
+
+* **fzf-lua:** Opening blocks+backlinks hang prompt ([868da79](https://github.com/juniorsundar/neorg-extras/commit/868da79e6e1e3ab9e3a7e6175cbc4713ec06359d))
+
+
+### Miscellaneous Chores
+
+* release 0.6.1 ([1bbb56b](https://github.com/juniorsundar/neorg-extras/commit/1bbb56bc8dbba73288e93106581fb93784d1c293))
+* release 0.7.0 ([3a56160](https://github.com/juniorsundar/neorg-extras/commit/3a56160375c6c87de7201684df06d6a5769e7fc7))
+
 ## [0.6.0](https://github.com/juniorsundar/neorg-extras/compare/v0.5.1...v0.6.0) (2025-01-01)
 
 
