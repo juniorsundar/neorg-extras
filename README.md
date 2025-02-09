@@ -42,9 +42,11 @@ return {
         -- FOR Neorg-Roam Features
         --- OPTION 1: Telescope
         "nvim-telescope/telescope.nvim",
-        "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
+        "nvim-lua/plenary.nvim",
         -- OR OPTION 2: Fzf-Lua
-        "ibhagwan/fzf-lua"
+        "ibhagwan/fzf-lua",
+        -- OR OPTION 3: Snacks
+        "folke/snacks.nvim"
     },
     config = function()
         require('neorg').setup({

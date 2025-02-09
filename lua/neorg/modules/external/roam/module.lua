@@ -1135,14 +1135,11 @@ module.public = {
 								{ text = "Untitled @" .. lineno, file = file, pos = { tonumber(lineno), 1 } }
 							)
 						elseif metadata["title"] ~= self_title then
-							table.insert(
-								items,
-								{
-									text = metadata["title"] .. " @" .. lineno,
-									file = file,
-									pos = { tonumber(lineno), 1 },
-								}
-							)
+							table.insert(items, {
+								text = metadata["title"] .. " @" .. lineno,
+								file = file,
+								pos = { tonumber(lineno), 1 },
+							})
 						else
 							table.insert(
 								items,
