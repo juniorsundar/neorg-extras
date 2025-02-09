@@ -1,4 +1,4 @@
-*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2025 February 08
+*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2025 February 09
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -52,9 +52,11 @@ LAZY.NVIM                                *neorg-extras-installation-lazy.nvim*
             -- FOR Neorg-Roam Features
             --- OPTION 1: Telescope
             "nvim-telescope/telescope.nvim",
-            "nvim-lua/plenary.nvim" -- Required as part of Telescope installation
+            "nvim-lua/plenary.nvim",
             -- OR OPTION 2: Fzf-Lua
-            "ibhagwan/fzf-lua"
+            "ibhagwan/fzf-lua",
+            -- OR OPTION 3: Snacks
+            "folke/snacks.nvim"
         },
         config = function()
             require('neorg').setup({
