@@ -733,6 +733,68 @@ module.public = {
                     },
                 },
             })
+        elseif module.config.public.fuzzy_finder == "Snacks" then
+            local get_blocks = function()
+                local items = {}
+                local pattern = "([^:]+):(%d+):(.*)"
+
+                for line in rg_results:gmatch("([^\n]+)") do
+                    local file, lineno, text = line:match(pattern)
+                    local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                    if metadata ~= nil then
+                        table.insert(items, { text = metadata["title"] .. " | " .. text, heading = text, file = file, pos = { tonumber(lineno), 1 }})
+                    else
+                        table.insert(items, { text = file .. " | " .. text, heading = text, file = file, pos = { tonumber(lineno), 1 }})
+                    end
+                end
+                return items
+            end
+
+            module.private.snacks_modules.picker.pick({
+                source = "neorg_blocks",
+                items = get_blocks(),
+                format = "text",
+                confirm = function(picker, item)
+                    picker:close()
+                    vim.cmd("edit " .. item.file)
+                    vim.cmd(":" .. item.pos[1])
+                end,
+                actions = {
+                    insert_block_at_cursor = function(picker, item)
+                        picker:close()
+                        local filename = item.file
+                        local base_path = base_directory:gsub("([^%w])", "%%%1")
+                        local rel_path = filename:match("^" .. base_path .. "/(.+)%..+")
+
+                        local heading_prefix =
+                        string.match(item.heading, "^(%** )")
+                        local heading_text = module.private.get_heading_text(
+                            filename,
+                            tonumber(item.pos[1])
+                        )
+                        if not heading_text then
+                            return
+                        else
+                            heading_text = heading_text:gsub("^%s+", "")
+                        end
+                        local full_heading_text = heading_prefix .. heading_text
+
+                        vim.api.nvim_put(
+                            { "{:$/" .. rel_path .. ":" .. full_heading_text .. "}[" .. heading_text .. "]" },
+                            "",
+                            true,
+                            true
+                        )
+                    end,
+                },
+                win = {
+                    input = {
+                        keys = {
+                            ["<C-i>"] = { "insert_block_at_cursor", mode = { "n", "i" }, desc = "Insert Block Reference at Cursor" },
+                        }
+                    }
+                }
+            })
         end
     end,
 
