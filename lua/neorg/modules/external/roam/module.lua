@@ -1110,6 +1110,34 @@ module.public = {
                         },
                     },
                 })
+            elseif module.config.public.fuzzy_finder == "Snacks" then
+                local get_backlinks = function()
+                    local items = {}
+                    for line in rg_results:gmatch("([^\n]+)") do
+                        local file, lineno = line:match("^(.-):(%d+):")
+                        local metadata = module.required["external.many-mans"]["meta-man"].extract_file_metadata(file)
+                        if metadata == nil then
+                            table.insert(items, {text = "Untitled @" .. lineno, file = file, pos = {tonumber(lineno), 1}})
+                        elseif metadata["title"] ~= self_title then
+                            table.insert(items, {text = metadata["title"] .. " @" .. lineno, file = file, pos = {tonumber(lineno), 1}})
+                        else
+                            table.insert(items, {text = "Untitled @" .. lineno, file = file, pos = {tonumber(lineno), 1}})
+                        end
+                    end
+                    return items
+                end
+
+                module.private.snacks_modules.picker.pick({
+                    source = "neorg_backlinks",
+                    items = get_backlinks(),
+                    format = "text",
+                    preview = "file",
+                    confirm = function(picker, item)
+                        picker:close()
+                        vim.cmd("edit " .. item.file)
+                        vim.cmd(":" .. item.pos[1])
+                    end,
+                })
             end
         end
     end,
