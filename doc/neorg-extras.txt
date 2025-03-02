@@ -1,4 +1,4 @@
-*neorg-extras.txt*        For NVIM v0.8.0        Last change: 2025 February 09
+*neorg-extras.txt*          For NVIM v0.8.0         Last change: 2025 March 02
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
@@ -16,13 +16,6 @@ Table of Contents                             *neorg-extras-table-of-contents*
   - Secondary                                   |neorg-extras-to-do-secondary|
 
 
-
-  [!warning]
-  This is a highly opinionated plugin. I built this for the sole purpose of
-  streamlining my workflow. To that end, my implementation is highly opinionated
-  and leaves very little room for customisation or personalisation.
-  They may not be the right or most optimal way to do things, but it works for
-  me. So, use at your own risk.
 
 ==============================================================================
 1. System Prerequisites                    *neorg-extras-system-prerequisites*
@@ -105,8 +98,9 @@ feel free to create a pull request.
 ==============================================================================
 3. Neorg-Roam                                        *neorg-extras-neorg-roam*
 
-At the moment, this feature relies heavily on the a 3rd-Party Fuzzy Finder
-(Telescope <https://github.com/nvim-telescope/telescope.nvim> or Fzf-Lua
+At the moment, this feature relies heavily on the a 3rd-Party Fuzzy Finder like
+(Snacks.picker <https://github.com/folke/snacks.nvim>, Telescope
+<https://github.com/nvim-telescope/telescope.nvim> or Fzf-Lua
 <https://github.com/ibhagwan/fzf-lua>). I have plans to liberate this plugin
 from this need, but that is something way down in the future after I have
 implemented the required basic features. So, for the moment, users of this
