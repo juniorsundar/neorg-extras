@@ -4,21 +4,12 @@
 
 # [Neorg](https://github.com/nvim-neorg/neorg)Extras
 
-Highly opinionated Neorg add-on to streamline organising your life in plain-text. 
+Neorg add-on to streamline organising your life in plain-text.
 
 </div>
 <div align="center">
 <br>
 </div>
-
-> [!warning]
-> 
-> This is a highly opinionated plugin. I built this for the sole purpose of
-> streamlining my workflow. To that end, my implementation is highly
-> opinionated and leaves very little room for customisation or personalisation.
-> 
-> They may not be the right or most optimal way to do things, but it works for
-> me. So, use at your own risk.
 
 # System Prerequisites
 
@@ -92,7 +83,10 @@ to create a pull request.
 
 # [Neorg-Roam](./docs/neorg-roam.md)
 
-At the moment, this feature relies heavily on the a 3rd-Party Fuzzy Finder ([Telescope](https://github.com/nvim-telescope/telescope.nvim) or [Fzf-Lua](https://github.com/ibhagwan/fzf-lua)).
+At the moment, this feature relies heavily on the a 3rd-Party Fuzzy Finder like
+([Snacks.picker](https://github.com/folke/snacks.nvim),
+[Telescope](https://github.com/nvim-telescope/telescope.nvim) or
+[Fzf-Lua](https://github.com/ibhagwan/fzf-lua)).
 I have plans to liberate this plugin from this need, but that
 is something way down in the future after I have implemented the required basic
 features. So, for the moment, users of this plugin will have to bear with this
