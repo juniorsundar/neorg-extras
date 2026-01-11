@@ -1,4 +1,4 @@
-*neorg-extras.txt*            For v0.10.0            Last change: 2025 July 13
+*neorg-extras.txt*         For NVIM v0.8.0        Last change: 2026 January 11
 
 ==============================================================================
 Table of Contents                             *neorg-extras-table-of-contents*
