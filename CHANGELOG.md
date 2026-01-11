@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/juniorsundar/neorg-extras/compare/v0.7.0...v0.8.0) (2026-01-11)
+
+
+### Features
+
+* Option for no title or name in the node filename ([#58](https://github.com/juniorsundar/neorg-extras/issues/58)) ([4033128](https://github.com/juniorsundar/neorg-extras/commit/4033128603dca6afdd353469b2700120e948d570))
+
 ## [0.7.0](https://github.com/juniorsundar/neorg-extras/compare/v0.6.0...v0.7.0) (2025-02-09)
 
 
